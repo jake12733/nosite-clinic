@@ -144,11 +144,9 @@ table.t{width:100%;border-collapse:separate;border-spacing:0;background:var(--sf
 .empty{padding:70px 20px;text-align:center;color:var(--mut);line-height:1.7;background:var(--sf);border:1px solid var(--line);border-radius:var(--r)}
 
 /* map */
-.mapv{position:absolute;inset:0;display:none;background:#e9edf2}
+.mapv{position:relative;flex:1;display:none;background:#e9edf2;margin:14px 20px 20px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;min-height:0}
 .main[data-v="map"] .mapv{display:block}
 .main[data-v="map"] .tblwrap,.main[data-v="map"] .bar{display:none}
-.main[data-v="map"] .sum{position:absolute;z-index:5;left:0;right:0;top:0;pointer-events:none}
-.main[data-v="map"] .sum .sc{pointer-events:auto;box-shadow:0 4px 16px rgba(15,23,42,.12)}
 #kmap{position:absolute;inset:0}
 .mlegend{position:absolute;left:16px;bottom:22px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--ink2);display:flex;gap:14px;box-shadow:0 4px 14px rgba(15,23,42,.1);flex-wrap:wrap}
 .mlegend span{display:inline-flex;align-items:center;gap:6px}
@@ -229,7 +227,8 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
 /* mobile */
 .mnav{display:none}
 .mcards{display:none}
-@media (max-width:1280px){.sum{grid-template-columns:repeat(3,1fr)}.sum .sc:nth-child(n+4){display:none}.c-dt{display:none}}
+@media (max-width:1640px){.c-dt{display:none}.em{max-width:170px}.nm small{max-width:240px}}
+@media (max-width:1280px){.sum{grid-template-columns:repeat(3,1fr)}.sum .sc:nth-child(n+4){display:none}}
 @media (max-width:1060px){.c-sn{display:none}.nm small{max-width:200px}}
 @media (max-width:900px){
   .top{height:56px;padding:0 12px;gap:8px}
@@ -255,6 +254,7 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
   .mc .ad{font-size:12px;color:var(--mut);margin:4px 0 9px}
   .mc .r2{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .main[data-v="map"] .sum{display:none}
+  .mapv{margin:0;border:0;border-radius:0}
   .mnav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;height:58px;background:var(--sf);border-top:1px solid var(--line);z-index:1500;padding-bottom:env(safe-area-inset-bottom)}
   .mnav button{border:0;background:none;color:var(--mut);font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-weight:600}
   .mnav button svg{width:20px;height:20px}
@@ -628,7 +628,6 @@ function loadKakao(){
 function initMap(){
   kmap = new kakao.maps.Map($('#kmap'), { center: new kakao.maps.LatLng(36.3, 127.9), level: 13 });
   kmap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-  kmap.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
   kakao.maps.event.addListener(kmap, 'idle', drawMap);
   mapReady = true; fitMap(); drawMap();
   if (selIdx >= 0) focusMap(selIdx, true);
@@ -639,7 +638,7 @@ function drawMap(){
   clearOv();
   const lv = kmap.getLevel(), bd = kmap.getBounds(), sw = bd.getSouthWest(), ne = bd.getNorthEast();
   const inB = r => r[F.y] && r[F.y]>=sw.getLat() && r[F.y]<=ne.getLat() && r[F.x]>=sw.getLng() && r[F.x]<=ne.getLng();
-  if (lv >= 8) {
+  if (lv >= 8 && !(st.sggu && lv <= 9)) {
     const bySido = lv >= 11; const g = {};
     for (const i of result) { const r = ROWS[i]; if (!r[F.y]) continue; const k = bySido ? r[F.sido] : r[F.sido]+'|'+r[F.sggu]; const a = g[k] || (g[k] = {n:0,k:0,x:0,y:0,lab: bySido ? sidoName(i) : r[F.sggu], sido:r[F.sido], sggu:r[F.sggu]}); a.n++; if (r[F.tc]) a.k++; a.x += r[F.x]; a.y += r[F.y]; }
     Object.values(g).forEach(a => {
