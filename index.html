@@ -281,7 +281,7 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
 .main[data-v="prompt"] .sum,.main[data-v="prompt"] .bar,.main[data-v="prompt"] .tblwrap,.main[data-v="prompt"] .mapv{display:none}
 .pcard{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .pside{display:flex;flex-direction:column;gap:12px;min-height:0}
-.pside .plist{flex:1;overflow:auto;display:grid;gap:6px;align-content:start;padding:2px}
+.pside .plist{flex:1;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:minmax(0,1fr);gap:6px;align-content:start;padding:2px}
 .pitem{border:1px solid var(--line);background:var(--sf);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;width:100%;transition:.12s}
 .pitem:hover{border-color:var(--line2)}
 .pitem.on{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy) inset}
@@ -1003,7 +1003,7 @@ const agoText = v => { const m = monthsSince(v); if (m >= 9999) return '개원�
 function varMap(i){
   const m = { '내이름': profile.name || '', '내연락처': profile.contact || '', '포트폴리오': profile.port || '' };
   if (i < 0 || !ROWS[i]) return m;
-  const r = ROWS[i]; let d = deptList(r[F.dSpec]); if (!d.length) d = deptList(r[F.dAll]);
+  const r = ROWS[i]; let d = deptList(r[F.dSpec]); if (!d.length && !/한의원|한방|치과/.test(typeName(i))) d = deptList(r[F.dAll]);
   const dept = d.length ? d.slice(0,3).join('·') + (d.length > 3 ? ' 등' : '') : typeName(i);
   return Object.assign(m, { '병원명': r[F.name], '종별': typeName(i), '지역': sidoName(i) + ' ' + r[F.sggu], '주소': r[F.addr], '전화': r[F.tel] || '미등록', '카톡채널': r[F.tc] ? kakaoUrl(r[F.tc]) : '없음', '진료과목': dept, '개원일': openStr(r[F.open]), '개원기간': agoText(r[F.open]), '홈페이지상태': ['없음','블로그·SNS만 운영','있음 ' + r[F.site]][r[F.st]], '의사수': r[F.docs] ? r[F.docs] + '명' : '미등록' });
 }
