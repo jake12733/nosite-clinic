@@ -490,6 +490,8 @@ textarea.pbody:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,
           <input class="inp" id="pfName" placeholder="내 이름/상호 (예: Owen Web)">
           <input class="inp" id="pfContact" placeholder="내 연락처 (전화·카톡 ID·이메일)">
           <input class="inp" id="pfPort" placeholder="포트폴리오 링크">
+          <input class="inp" id="pfKakao" placeholder="내 카톡 ID → {카톡ID}">
+          <input class="inp" id="pfDemo" placeholder="기본 데모 링크 → {데모링크} (병원별로 따로 입력 가능)">
         </div>
         <div class="chips" id="pcats"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><button class="pbtn pri" id="pNew" style="justify-content:center">+ 새 프롬프트</button><button class="pbtn" id="pPaste" style="justify-content:center">클립보드에서 붙여넣기</button></div>
@@ -756,7 +758,7 @@ function openDet(i){
 function closeDet(){ $('#det').classList.remove('open'); selIdx = -1; $$('#tbody tr.act').forEach(e=>e.classList.remove('act')); if (selOv) { selOv.setMap(null); selOv = null; } }
 function setLead(i, patch){
   const k = keyOf(i); const L0 = Object.assign({}, leads[k]||{}, patch, {u:Date.now()});
-  if (!L0.s && !L0.m && !L0.star) delete leads[k]; else leads[k] = L0;
+  if (!L0.s && !L0.m && !L0.star && !L0.demo) delete leads[k]; else leads[k] = L0;
   saveLeads(); refreshRow(i);
 }
 
@@ -859,8 +861,11 @@ function stats(){
 
 // ---------- prompts ----------
 const PS = 'nosite-prompts-v1', PF = 'nosite-profile-v1';
-const CATS = { kakao:'카톡', call:'전화', mail:'이메일', reply:'고객 응대', ai:'AI 프롬프트', etc:'기타' };
-const VARS = ['병원명','종별','지역','주소','전화','카톡채널','진료과목','개원일','개원기간','홈페이지상태','의사수','내이름','내연락처','포트폴리오'];
+const CATS = { kakao:'카톡', mail:'이메일', faq:'자주 묻는 질문', call:'전화', reply:'고객 응대', ai:'AI 프롬프트', etc:'기타' };
+const VARS = ['병원명','지역','데모링크','카톡ID','내연락처','내이름','종별','주소','전화','카톡채널','진료과목','개원일','개원기간','홈페이지상태','의사수','포트폴리오'];
+const ALIAS = { '지역명':'지역', '데모 링크':'데모링크', '데모주소':'데모링크', '연락처':'내연락처', '카톡 ID':'카톡ID', '카카오톡ID':'카톡ID', '병원 이름':'병원명' };
+const TOKEN_RE = /\{([^{}\n]{1,12})\}|\[([^\[\]\n]{1,12})\]/g;
+const tokKey = (a, b) => { const raw = (a ?? b ?? '').trim(); const k = ALIAS[raw] || raw; return (a != null || VARS.includes(k)) ? k : null; };
 const PKG = '스탠다드 30만 원(1~2페이지) / 디럭스 50만 원(5페이지 이하, 추천) / 프리미엄 70만 원(최대 7페이지, 고급 모션). 결제는 계좌이체, 3.3% 원천징수 기준.';
 const HOSP_BLOCK = `[병원 정보]
 - 병원명: {병원명} ({종별})
@@ -871,6 +876,36 @@ const HOSP_BLOCK = `[병원 정보]
 - 현재 홈페이지: {홈페이지상태}
 - 카톡채널: {카톡채널}`;
 const DEFAULT_PROMPTS = [
+{id:'d13',cat:'kakao',title:'카톡채널·오픈채팅 첫 선제안 (초간결형)',body:`안녕하세요 원장님! {병원명} 카카오 채널로 문의드립니다.
+
+최근 지역 내 신규 환자분들이 모바일 검색으로 병원을 찾으시는 경우가 많은데, 원장님 병원의 모바일 웹 접근성이 조금 아쉬워 보여 연락드리게 되었습니다.
+
+부담 없이 보실 수 있도록 {병원명} 맞춤형 모바일 웹 샘플(데모)을 먼저 제작해 두었습니다. 아래 링크에서 확인해 보실 수 있습니다.
+
+🔗 모바일 시안 보기: {데모링크}
+
+100% 무료로 시안 수정을 도와드리고 있으니, 편하게 살펴보시고 필요하실 때 말씀 부탁드립니다!
+(웹 개발자 윤태현 드림)`},
+{id:'d14',cat:'mail',title:'이메일 콜드메일 제안 (신뢰 형성형)',body:`[제목] {병원명} 원장님, 모바일 맞춤 웹사이트 무료 데모 시안 안내드립니다.
+
+[본문]
+원장님 안녕하세요.
+반응형 웹 프론트엔드를 제작하고 있는 프리랜서 개발자 윤태현입니다.
+
+다름이 아니라 {지역} 지역 병원 데이터를 살펴보던 중, {병원명}의 훌륭한 진료 정보가 모바일 검색 환자들에게 더 직관적으로 전달되면 좋겠다는 생각이 들어 실속형 맞춤 웹사이트 시안을 직접 제작해 보았습니다.
+
+📌 {병원명} 맞춤형 모바일 데모: {데모링크}
+
+[주요 특징]
+- 모바일/PC 스마트폰 맞춤형 최적화 (빠른 로딩)
+- 진료 시간, 오시는 길(지도), 카톡 상담/전화 걸기 버튼 최우선 배치
+- 초기 제작비 부담 없는 합리적인 구축 패키지 지원
+
+보내드린 데모 주소는 원장님 병원 전용으로 제작된 시안이오니 편하게 살펴보시고, 텍스트나 이미지 수정이 필요하시다면 언제든 무료로 맞춰드리겠습니다.
+
+답장이나 카카오톡({카톡ID}), 전화({내연락처}) 중 편하신 방법으로 말씀해 주시면 감사하겠습니다. 좋은 하루 되세요!`},
+{id:'d15',cat:'faq',title:'Q. "비용이 어떻게 되나요?" (가격 문의)',body:`원장님, 기본 템플릿형 모바일 웹의 경우 세팅 및 초기 구축 포함 80만 원선에서 제작 가능하며, 필요하신 기능이나 진료 안내 페이지 분량에 따라 맞춤 조정해 드립니다. 원하시는 기능만 쏙 넣어 최소 비용으로 맞춰드릴 수 있으니 편하게 말씀해 주세요!`},
+{id:'d16',cat:'faq',title:'Q. "블로그/네이버 플레이스만 써도 충분한데요?" (거절)',body:`네 원장님! 요즘 네이버 플레이스나 블로그 운영도 정말 중요합니다. 다만 플레이스를 검색해 들어온 환자분들이 '공식 웹사이트' 링크를 눌렀을 때 깔끔한 모바일 화면이 나타나면 병원에 대한 신뢰도가 훨씬 높아집니다. 기존 블로그와 연동되는 메인 홈페이지 역할만 하도록 가볍게 세팅해 드릴 수도 있습니다.`},
 {id:'d1',cat:'kakao',title:'첨 연락 · 홈페이지 없는 병원',body:`안녕하세요, {병원명} 원장님. 병원 홈페이지를 제작하는 {내이름}입니다.
 {지역} {진료과목} 병원을 찾아보다가, {병원명}은 아직 공식 홈페이지가 없는 것 같아 조심스럽게 연락드렸어요.
 
@@ -994,21 +1029,32 @@ ${HOSP_BLOCK}`}
 ];
 let prompts = [], profile = {}, curP = null, pHosp = -1, pCatF = 'all';
 try { prompts = JSON.parse(localStorage.getItem(PS) || 'null'); } catch { prompts = null; }
+const NEW_DEFAULTS = ['d13','d14','d15','d16'];
 if (!Array.isArray(prompts)) prompts = DEFAULT_PROMPTS.map(p => ({...p}));
+let seenD; try { seenD = JSON.parse(localStorage.getItem('nosite-prompts-seen') || 'null'); } catch { seenD = null; }
+if (!Array.isArray(seenD)) seenD = localStorage.getItem(PS) ? DEFAULT_PROMPTS.map(d => d.id).filter(id => !NEW_DEFAULTS.includes(id)) : DEFAULT_PROMPTS.map(d => d.id);
+[...NEW_DEFAULTS].reverse().forEach(id => { if (!seenD.includes(id) && !prompts.find(p => p.id === id)) { const d = DEFAULT_PROMPTS.find(x => x.id === id); if (d) prompts.unshift({...d}); } });
+DEFAULT_PROMPTS.forEach(d => { if (!seenD.includes(d.id)) seenD.push(d.id); });
+localStorage.setItem('nosite-prompts-seen', JSON.stringify(seenD));
+{ const ord = id => { const k = NEW_DEFAULTS.indexOf(id); return k < 0 ? 99 : k; }; if (!localStorage.getItem(PS)) prompts.sort((a,b) => ord(a.id) - ord(b.id)); }
 try { profile = JSON.parse(localStorage.getItem(PF) || 'null') || {}; } catch { profile = {}; }
 if (!profile.name && !profile.port && !profile.contact) profile = { name:'Owen Web', contact:'', port:'https://jake12733.github.io/web-buy/' };
+if (profile.kakao === undefined) profile.kakao = '';
+if (profile.demo === undefined) profile.demo = '';
+const demoOf = i => (i >= 0 && ROWS[i] && (leads[keyOf(i)] || {}).demo) || profile.demo || '';
 const saveP = () => localStorage.setItem(PS, JSON.stringify(prompts));
 const saveProf = () => localStorage.setItem(PF, JSON.stringify(profile));
 const agoText = v => { const m = monthsSince(v); if (m >= 9999) return '개원일 미등록'; if (m <= 0) return '이번 달 개원'; if (m < 12) return m + '개월 전 개원'; return Math.floor(m/12) + '년 전 개원'; };
 function varMap(i){
-  const m = { '내이름': profile.name || '', '내연락처': profile.contact || '', '포트폴리오': profile.port || '' };
+  const m = { '내이름': profile.name || '', '내연락처': profile.contact || '', '포트폴리오': profile.port || '', '카톡ID': profile.kakao || '', '데모링크': demoOf(i) };
   if (i < 0 || !ROWS[i]) return m;
   const r = ROWS[i]; let d = deptList(r[F.dSpec]); if (!d.length && !/한의원|한방|치과/.test(typeName(i))) d = deptList(r[F.dAll]);
   const dept = d.length ? d.slice(0,3).join('·') + (d.length > 3 ? ' 등' : '') : typeName(i);
   return Object.assign(m, { '병원명': r[F.name], '종별': typeName(i), '지역': sidoName(i) + ' ' + r[F.sggu], '주소': r[F.addr], '전화': r[F.tel] || '미등록', '카톡채널': r[F.tc] ? kakaoUrl(r[F.tc]) : '없음', '진료과목': dept, '개원일': openStr(r[F.open]), '개원기간': agoText(r[F.open]), '홈페이지상태': ['없음','블로그·SNS만 운영','있음 ' + r[F.site]][r[F.st]], '의사수': r[F.docs] ? r[F.docs] + '명' : '미등록' });
 }
-function fillText(body, i){ const m = varMap(i); return body.replace(/\{([^{}\n]{1,12})\}/g, (s, k) => (m[k] !== undefined && m[k] !== '') ? m[k] : s); }
-function fillHTML(body, i){ const m = varMap(i); return esc(body).replace(/\{([^{}\n]{1,12})\}/g, (s, k) => (m[k] !== undefined && m[k] !== '') ? esc(m[k]) : (VARS.includes(k) ? `<mark>${s}</mark>` : s)); }
+function fillText(body, i){ const m = varMap(i); return body.replace(TOKEN_RE, (s, a, b) => { const k = tokKey(a, b); return (k && m[k] !== undefined && m[k] !== '') ? m[k] : s; }); }
+function fillHTML(body, i){ const m = varMap(i); return esc(body).replace(TOKEN_RE, (s, a, b) => { const k = tokKey(a, b); if (!k) return s; return (m[k] !== undefined && m[k] !== '') ? esc(m[k]) : (VARS.includes(k) ? `<mark>${s}</mark>` : s); }); }
+function missingVars(body, i){ const m = varMap(i); const out = new Set(); for (const x of (body||'').matchAll(TOKEN_RE)) { const k = tokKey(x[1], x[2]); if (k && VARS.includes(k) && !m[k]) out.add(k); } return [...out]; }
 function renderPList(){
   const cnt = {all: prompts.length}; prompts.forEach(p => cnt[p.cat] = (cnt[p.cat]||0)+1);
   $('#pcats').innerHTML = [['all','전체'], ...Object.entries(CATS)].filter(([k]) => k==='all' || cnt[k]).map(([k,t]) => `<span class="chip${pCatF===k?' on':''}" data-pc="${k}">${t} <i>${cnt[k]||0}</i></span>`).join('');
@@ -1023,21 +1069,21 @@ function openP(id){
 function renderPSel(){
   if (pHosp < 0) { $('#psel').innerHTML = '<span style="color:var(--dim);font-weight:500">선택된 병원 없음 (변수가 그대로 남아요)</span>'; return; }
   const r = ROWS[pHosp];
-  $('#psel').innerHTML = `<span>${esc(r[F.name])}</span><span class="bd">${typeName(pHosp)}</span><span style="color:var(--mut);font-weight:500">${esc(sidoName(pHosp))} ${esc(r[F.sggu])}</span>${r[F.tc]?'<span class="tag kk" style="padding:2px 7px"><svg><use href="#i-chat"/></svg>카톡</span>':''}<button class="x2" data-unsel title="선택 해제">✕</button>`;
+  $('#psel').innerHTML = `<span>${esc(r[F.name])}</span><span class="bd">${typeName(pHosp)}</span><span style="color:var(--mut);font-weight:500">${esc(sidoName(pHosp))} ${esc(r[F.sggu])}</span>${r[F.tc]?'<span class="tag kk" style="padding:2px 7px"><svg><use href="#i-chat"/></svg>카톡</span>':''}<button class="x2" data-unsel title="선택 해제">✕</button><input class="inp demo-in" id="pDemo" data-demo-i="${pHosp}" placeholder="이 병원 데모 링크 (비우면 기본 데모 링크)" value="${esc((leads[keyOf(pHosp)]||{}).demo||'')}" style="height:34px;font-size:12.5px;min-width:280px;flex:1;font-weight:500">`;
 }
 function renderPrev(){
   const p = prompts.find(x => x.id===curP);
   $('#ptext').innerHTML = p ? fillHTML(p.body||'', pHosp) : '';
   const r = pHosp >= 0 ? ROWS[pHosp] : null;
   $('#pacts').innerHTML = `<button class="pbtn pri" data-pcopy>복사하기</button>${p && p.cat==='ai' ? '<a class="pbtn" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT 열기</a><a class="pbtn" href="https://claude.ai/new" target="_blank" rel="noopener">Claude 열기</a>' : ''}${r && r[F.tc] ? `<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener"><svg width="14" height="14"><use href="#i-chat"/></svg>카톡채널 열기</a>` : ''}${r && r[F.tel] ? `<a class="pbtn" href="tel:${esc(r[F.tel])}">전화 걸기</a>` : ''}${r && r[F.email] ? `<a class="pbtn" href="mailto:${esc(r[F.email])}">메일 쓰기</a>` : ''}`;
-  const miss = p ? [...new Set([...(p.body||'').matchAll(/\{([^{}\n]{1,12})\}/g)].map(x=>x[1]).filter(k => VARS.includes(k) && !varMap(pHosp)[k]))] : [];
-  if (miss.length) $('#pacts').insertAdjacentHTML('beforeend', `<span class="psv">빈 항목: ${miss.map(esc).join(', ')}</span>`);
+  const miss = p ? missingVars(p.body, pHosp) : [];
+  if (miss.length) $('#pacts').insertAdjacentHTML('beforeend', `<span class="psv">빈 항목: ${miss.map(esc).join(', ')}${miss.includes('데모링크')?' (위에서 데모 링크 입력)':''}</span>`);
 }
 function pickHosp(i){ pHosp = i; renderPSel(); renderPrev(); $('#phq').value = ''; $('#pdrop').classList.remove('open'); }
 function buildPromptUI(){
   $('#pcat').innerHTML = Object.entries(CATS).map(([k,t]) => `<option value="${k}">${t}</option>`).join('');
   $('#pvars').innerHTML = VARS.map(v => `<button data-var="${v}">{${v}}</button>`).join('');
-  $('#pfName').value = profile.name || ''; $('#pfContact').value = profile.contact || ''; $('#pfPort').value = profile.port || '';
+  $('#pfName').value = profile.name || ''; $('#pfContact').value = profile.contact || ''; $('#pfPort').value = profile.port || ''; $('#pfKakao').value = profile.kakao || ''; $('#pfDemo').value = profile.demo || '';
   renderPSel(); openP(prompts[0] && prompts[0].id);
 }
 function newPrompt(body, title){ const p = { id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2,6), cat: pCatF!=='all' ? pCatF : 'etc', title: title || '새 프롬프트', body: body || '' }; prompts.unshift(p); saveP(); openP(p.id); $('#pbody').focus(); return p; }
@@ -1045,8 +1091,8 @@ function drawerPromptHTML(i){
   const opts = prompts.filter(p => p.cat !== 'ai').concat(prompts.filter(p => p.cat === 'ai'));
   if (!opts.length) return '';
   const r = ROWS[i];
-  const def = opts.find(p => r[F.st]===1 ? p.id==='d3' : (monthsSince(r[F.open])<=12 ? p.id==='d2' : p.id==='d1')) || opts[0];
-  return `<div class="h4">응대 문구</div><div class="dprompt"><select class="dd" id="dpSel">${opts.map(p => `<option value="${p.id}" ${p.id===def.id?'selected':''}>[${CATS[p.cat]||'기타'}] ${esc(p.title)}</option>`).join('')}</select><div class="ptext" id="dpText">${fillHTML(def.body||'', i)}</div><div class="pacts"><button class="pbtn pri" data-dpcopy>문구 복사</button>${r[F.tc]?`<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener">복사 후 카톡 열기</a>`:''}<button class="pbtn" data-dpedit>프롬프트에서 편집</button></div></div>`;
+  const def = (r[F.tc] && opts.find(p => p.id==='d13')) || (r[F.email] && opts.find(p => p.id==='d14')) || opts.find(p => p.id==='d13') || opts.find(p => r[F.st]===1 ? p.id==='d3' : (monthsSince(r[F.open])<=12 ? p.id==='d2' : p.id==='d1')) || opts[0];
+  return `<div class="h4">응대 문구</div><div class="dprompt"><select class="dd" id="dpSel">${opts.map(p => `<option value="${p.id}" ${p.id===def.id?'selected':''}>[${CATS[p.cat]||'기타'}] ${esc(p.title)}</option>`).join('')}</select><input class="inp demo-in" id="dpDemo" placeholder="이 병원 데모 링크 → {데모링크}" value="${esc((leads[keyOf(i)]||{}).demo||'')}" style="height:36px;font-size:12.5px;margin-bottom:8px"><div class="ptext" id="dpText">${fillHTML(def.body||'', i)}</div><div class="pacts"><button class="pbtn pri" data-dpcopy>문구 복사</button>${r[F.tc]?`<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener">복사 후 카톡 열기</a>`:''}<button class="pbtn" data-dpedit>프롬프트에서 편집</button></div></div>`;
 }
 function bindPrompts(){
   let pT;
@@ -1060,7 +1106,8 @@ function bindPrompts(){
   $('#pDup').addEventListener('click', () => { const p = prompts.find(x => x.id===curP); if (!p) return; const n = { ...p, id: 'u' + Date.now().toString(36), title: p.title + ' (복사본)' }; prompts.splice(prompts.indexOf(p)+1, 0, n); saveP(); openP(n.id); toast('복제했어요'); });
   $('#pDel').addEventListener('click', () => { const p = prompts.find(x => x.id===curP); if (!p) return; if (!confirm(`'${p.title}' 프롬프트를 삭제할까요?`)) return; const k = prompts.indexOf(p); prompts.splice(k,1); saveP(); openP((prompts[k] || prompts[k-1] || {}).id); toast('삭제했어요'); });
   $('#pReset').addEventListener('click', () => { let n = 0; DEFAULT_PROMPTS.forEach(d => { if (!prompts.find(p => p.id===d.id)) { prompts.push({...d}); n++; } }); saveP(); renderPList(); toast(n ? `기본 프롬프트 ${n}개를 다시 추가했어요` : '기본 프롬프트가 모두 있어요'); });
-  ['pfName','pfContact','pfPort'].forEach(id => $('#'+id).addEventListener('input', () => { profile = { name: $('#pfName').value, contact: $('#pfContact').value, port: $('#pfPort').value }; saveProf(); renderPrev(); }));
+  ['pfName','pfContact','pfPort','pfKakao','pfDemo'].forEach(id => $('#'+id).addEventListener('input', () => { profile = { name: $('#pfName').value, contact: $('#pfContact').value, port: $('#pfPort').value, kakao: $('#pfKakao').value, demo: $('#pfDemo').value }; saveProf(); renderPrev(); }));
+  $('#psel').addEventListener('input', e => { if (e.target.id !== 'pDemo') return; const i = +e.target.dataset.demoI; clearTimeout(e.target._t); e.target._t = setTimeout(() => { setLead(i, { demo: e.target.value.trim() }); renderPrev(); }, 300); });
   $('#pacts').addEventListener('click', e => { if (!e.target.closest('[data-pcopy]')) return; const p = prompts.find(x => x.id===curP); if (p) copy(fillText(p.body||'', pHosp), '복사했어요. 카톡·메일·AI에 붙여넣으세요'); });
   $('#psel').addEventListener('click', e => { if (e.target.closest('[data-unsel]')) pickHosp(-1); });
   let hT;
@@ -1112,6 +1159,7 @@ function bind(){
     if (e.target.closest('[data-copyall]')) { const r = ROWS[i]; copy([`${r[F.name]} (${typeName(i)})`, r[F.addr], '전화: '+(r[F.tel]||'-'), '홈페이지: '+(['없음','블로그·SNS만','있음 '+r[F.site]][r[F.st]]), r[F.tc]?'카톡채널: '+kakaoUrl(r[F.tc]):'', r[F.email]?'이메일(추정): '+r[F.email]:'', ...(r[F.sns]||[])].filter(Boolean).join('\n')); }
   });
   $('#det').addEventListener('change', e => { if (e.target.id !== 'dpSel') return; const i = +$('#det').dataset.i; const p = prompts.find(x => x.id===e.target.value); $('#dpText').innerHTML = p ? fillHTML(p.body||'', i) : ''; });
+  $('#det').addEventListener('input', e => { if (e.target.id !== 'dpDemo') return; const i = +$('#det').dataset.i; clearTimeout(e.target._t); e.target._t = setTimeout(() => { setLead(i, { demo: e.target.value.trim() }); const p = prompts.find(x => x.id===$('#dpSel').value); $('#dpText').innerHTML = p ? fillHTML(p.body||'', i) : ''; if (pHosp === i) renderPrev(); }, 300); });
   $('#det').addEventListener('input', e => { if (e.target.id!=='memo') return; const i = +$('#det').dataset.i; clearTimeout(e.target._t); e.target._t = setTimeout(()=>{ setLead(i, {m:e.target.value}); $('#sv').textContent = '저장됨 · '+new Date().toLocaleTimeString('ko-KR'); }, 400); });
   $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); });
   $('#btnCsv').addEventListener('click', csv); $('#btnStats').addEventListener('click', stats);
