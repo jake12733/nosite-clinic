@@ -134,9 +134,12 @@ textarea.memo:focus{border-color:var(--gold)}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.85)}
 .pin{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.6)}
 .pin.sel{width:20px;height:20px;border-color:var(--gold);box-shadow:0 0 0 4px rgba(212,175,55,.35)}
-.marker-cluster{background:rgba(212,175,55,.22)!important}
-.marker-cluster div{background:rgba(212,175,55,.85)!important;color:#0b131f!important;font-weight:800;font-family:inherit}
+.marker-cluster{background:rgba(212,175,55,.22);border-radius:50%;background-clip:padding-box}
+.marker-cluster div{width:30px;height:30px;margin-left:5px;margin-top:5px;border-radius:50%;text-align:center;background:rgba(212,175,55,.92);color:#0b131f;font-weight:800;font-size:11.5px;font-family:inherit;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 .marker-cluster span{line-height:30px}
+.marker-cluster-large{background:rgba(239,107,107,.22)}
+.marker-cluster-large div{background:rgba(240,210,122,.95)}
+.leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.88) contrast(.92) saturate(.6)}
 .leaflet-container{font-family:inherit}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#121e30;color:var(--txt);border:1px solid var(--line2)}
 .leaflet-control-zoom a{background:#121e30!important;color:var(--txt)!important;border-color:var(--line2)!important}
@@ -441,7 +444,7 @@ function cardHTML(i){
       ${L.s ? `<span class="bd st" style="color:${LEAD[L.s].c}">${LEAD[L.s].t}</span>` : ''}
     </div>
     <div class="addr">${esc(r[F.addr])}</div>
-    <div class="meta">${r[F.tel] ? `<a href="tel:${esc(r[F.tel])}" data-stop>${esc(r[F.tel])}</a>` : '<span>전화 미등록</span>'}<span>의사 ${r[F.docs]}명</span><span>개설 ${openStr(r[F.open])}</span></div>
+    <div class="meta">${r[F.tel] ? `<a href="tel:${esc(r[F.tel])}" data-stop>${esc(r[F.tel])}</a>` : '<span>전화 미등록</span>'}<span>${r[F.docs]?'의사 '+r[F.docs]+'명':'의사 수 미등록'}</span><span>개설 ${openStr(r[F.open])}</span></div>
   </div>`;
 }
 function renderMore(){
@@ -462,7 +465,7 @@ function refreshCard(i){
 let map, cluster, markers = new Array(0), selMarker = null;
 function initMap(){
   map = L.map('map', { zoomControl:true, preferCanvas:true, minZoom:6, maxZoom:19 }).setView([36.35, 127.8], 7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution:'&copy; OpenStreetMap &copy; CARTO', subdomains:'abcd', maxZoom:19 }).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors', maxZoom:19 }).addTo(map);
   cluster = L.markerClusterGroup({ chunkedLoading:true, chunkInterval:120, showCoverageOnHover:false, maxClusterRadius:55, spiderfyOnMaxZoom:true, disableClusteringAtZoom:17 });
   map.addLayer(cluster);
   markers = new Array(N);
@@ -519,7 +522,7 @@ function renderDet(i){
         <dt>전화</dt><dd>${r[F.tel]?`<a href="tel:${esc(r[F.tel])}">${esc(r[F.tel])}</a>`:'미등록'}</dd>
         <dt>지역</dt><dd>${esc(sidoName(i))} ${esc(r[F.sggu])}</dd>
         <dt>개설일</dt><dd>${openStr(r[F.open])} (${ageLabel(r[F.open])})</dd>
-        <dt>의사 수</dt><dd>${r[F.docs]}명</dd>
+        <dt>의사 수</dt><dd>${r[F.docs]?r[F.docs]+'명':'미등록'}</dd>
         ${r[F.url]?`<dt>등록 채널</dt><dd><a href="${esc(/^https?:/i.test(r[F.url])?r[F.url]:'http://'+r[F.url])}" target="_blank" rel="noopener">${esc(r[F.url])}</a></dd>`:''}
         <dt>전문의 과목</dt><dd>${spec.length?esc(spec.join(', ')):'-'}</dd>
         <dt>진료과목</dt><dd style="color:var(--mut)">${all.length?esc(all.join(', ')):'-'}</dd>
