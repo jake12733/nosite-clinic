@@ -500,8 +500,8 @@ textarea.pbody:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,
       </div>
       <div class="pmain">
         <div class="pcard phosp">
-          <span class="lab">어느 병원에 보낼까요?</span>
-          <div class="psearch"><input class="inp" id="phq" placeholder="병원 이름으로 검색 (표에서 고른 병원이 자동 선택돼요)" autocomplete="off"><div class="pdrop" id="pdrop"></div></div>
+          <span class="lab" style="font-size:13px;color:var(--ink)">병원명</span>
+          <div class="psearch"><input class="inp" id="phq" placeholder="병원명 입력 → 바로 미리보기에 적용돼요" autocomplete="off" style="font-weight:700;font-size:14px;border-color:var(--gold)"><div class="pdrop" id="pdrop"></div></div>
           <div class="psel" id="psel"></div>
         </div>
         <div class="pcard pedit">
@@ -752,7 +752,7 @@ function openDet(i){
       <div class="sv" id="sv">${L0.u?'마지막 수정 '+new Date(L0.u).toLocaleString('ko-KR'):''}</div>
     </div>`;
   $('#det').dataset.i = i; $('#det').classList.add('open');
-  pHosp = i; renderPSel(); renderPrev();
+  pHosp = i; pName = ''; $('#phq').value = ROWS[i][F.name]; renderPSel(); renderPrev();
   if (mapReady && $('#main').dataset.v==='map') focusMap(i, false);
 }
 function closeDet(){ $('#det').classList.remove('open'); selIdx = -1; $$('#tbody tr.act').forEach(e=>e.classList.remove('act')); if (selOv) { selOv.setMap(null); selOv = null; } }
@@ -1045,16 +1045,18 @@ const demoOf = i => (i >= 0 && ROWS[i] && (leads[keyOf(i)] || {}).demo) || profi
 const saveP = () => localStorage.setItem(PS, JSON.stringify(prompts));
 const saveProf = () => localStorage.setItem(PF, JSON.stringify(profile));
 const agoText = v => { const m = monthsSince(v); if (m >= 9999) return '개원일 미등록'; if (m <= 0) return '이번 달 개원'; if (m < 12) return m + '개월 전 개원'; return Math.floor(m/12) + '년 전 개원'; };
-function varMap(i){
-  const m = { '내이름': profile.name || '', '내연락처': profile.contact || '', '포트폴리오': profile.port || '', '카톡ID': profile.kakao || '', '데모링크': demoOf(i) };
+let pName = '', pDemoTmp = '';
+function varMap(i, nm){
+  const m = { '내이름': profile.name || '', '내연락처': profile.contact || '', '포트폴리오': profile.port || '', '카톡ID': profile.kakao || '', '데모링크': (i < 0 && nm !== undefined && pDemoTmp) ? pDemoTmp : demoOf(i) };
+  if (nm) m['병원명'] = nm;
   if (i < 0 || !ROWS[i]) return m;
   const r = ROWS[i]; let d = deptList(r[F.dSpec]); if (!d.length && !/한의원|한방|치과/.test(typeName(i))) d = deptList(r[F.dAll]);
   const dept = d.length ? d.slice(0,3).join('·') + (d.length > 3 ? ' 등' : '') : typeName(i);
-  return Object.assign(m, { '병원명': r[F.name], '종별': typeName(i), '지역': sidoName(i) + ' ' + r[F.sggu], '주소': r[F.addr], '전화': r[F.tel] || '미등록', '카톡채널': r[F.tc] ? kakaoUrl(r[F.tc]) : '없음', '진료과목': dept, '개원일': openStr(r[F.open]), '개원기간': agoText(r[F.open]), '홈페이지상태': ['없음','블로그·SNS만 운영','있음 ' + r[F.site]][r[F.st]], '의사수': r[F.docs] ? r[F.docs] + '명' : '미등록' });
+  return Object.assign(m, { '병원명': nm || r[F.name], '종별': typeName(i), '지역': sidoName(i) + ' ' + r[F.sggu], '주소': r[F.addr], '전화': r[F.tel] || '미등록', '카톡채널': r[F.tc] ? kakaoUrl(r[F.tc]) : '없음', '진료과목': dept, '개원일': openStr(r[F.open]), '개원기간': agoText(r[F.open]), '홈페이지상태': ['없음','블로그·SNS만 운영','있음 ' + r[F.site]][r[F.st]], '의사수': r[F.docs] ? r[F.docs] + '명' : '미등록' });
 }
-function fillText(body, i){ const m = varMap(i); return body.replace(TOKEN_RE, (s, a, b) => { const k = tokKey(a, b); return (k && m[k] !== undefined && m[k] !== '') ? m[k] : s; }); }
-function fillHTML(body, i){ const m = varMap(i); return esc(body).replace(TOKEN_RE, (s, a, b) => { const k = tokKey(a, b); if (!k) return s; return (m[k] !== undefined && m[k] !== '') ? esc(m[k]) : (VARS.includes(k) ? `<mark>${s}</mark>` : s); }); }
-function missingVars(body, i){ const m = varMap(i); const out = new Set(); for (const x of (body||'').matchAll(TOKEN_RE)) { const k = tokKey(x[1], x[2]); if (k && VARS.includes(k) && !m[k]) out.add(k); } return [...out]; }
+function fillText(body, i, nm){ const m = varMap(i, nm); return body.replace(TOKEN_RE, (s, a, b) => { const k = tokKey(a, b); return (k && m[k] !== undefined && m[k] !== '') ? m[k] : s; }); }
+function fillHTML(body, i, nm){ const m = varMap(i, nm); return esc(body).replace(TOKEN_RE, (s, a, b) => { const k = tokKey(a, b); if (!k) return s; return (m[k] !== undefined && m[k] !== '') ? esc(m[k]) : (VARS.includes(k) ? `<mark>${s}</mark>` : s); }); }
+function missingVars(body, i, nm){ const m = varMap(i, nm); const out = new Set(); for (const x of (body||'').matchAll(TOKEN_RE)) { const k = tokKey(x[1], x[2]); if (k && VARS.includes(k) && !m[k]) out.add(k); } return [...out]; }
 function renderPList(){
   const cnt = {all: prompts.length}; prompts.forEach(p => cnt[p.cat] = (cnt[p.cat]||0)+1);
   $('#pcats').innerHTML = [['all','전체'], ...Object.entries(CATS)].filter(([k]) => k==='all' || cnt[k]).map(([k,t]) => `<span class="chip${pCatF===k?' on':''}" data-pc="${k}">${t} <i>${cnt[k]||0}</i></span>`).join('');
@@ -1067,19 +1069,19 @@ function openP(id){
   renderPList(); renderPrev(); $('#psv').textContent = '';
 }
 function renderPSel(){
-  if (pHosp < 0) { $('#psel').innerHTML = '<span style="color:var(--dim);font-weight:500">선택된 병원 없음 (변수가 그대로 남아요)</span>'; return; }
+  if (pHosp < 0) { $('#psel').innerHTML = (pName ? '<span class="bd" style="background:var(--goldbg);color:var(--gold-d)">직접 입력</span><span style="color:var(--mut);font-weight:500">병원명만 적용 중 (목록에서 고르면 지역·카톡도 채워져요)</span>' : '<span style="color:var(--dim);font-weight:500">병원명을 입력하면 바로 아래 미리보기에 들어가요</span>') + `<input class="inp demo-in" id="pDemoTmp" placeholder="데모 링크 (비우면 기본 데모 링크)" value="${esc(pDemoTmp)}" style="height:34px;font-size:12.5px;min-width:260px;flex:1;font-weight:500">`; return; }
   const r = ROWS[pHosp];
   $('#psel').innerHTML = `<span>${esc(r[F.name])}</span><span class="bd">${typeName(pHosp)}</span><span style="color:var(--mut);font-weight:500">${esc(sidoName(pHosp))} ${esc(r[F.sggu])}</span>${r[F.tc]?'<span class="tag kk" style="padding:2px 7px"><svg><use href="#i-chat"/></svg>카톡</span>':''}<button class="x2" data-unsel title="선택 해제">✕</button><input class="inp demo-in" id="pDemo" data-demo-i="${pHosp}" placeholder="이 병원 데모 링크 (비우면 기본 데모 링크)" value="${esc((leads[keyOf(pHosp)]||{}).demo||'')}" style="height:34px;font-size:12.5px;min-width:280px;flex:1;font-weight:500">`;
 }
 function renderPrev(){
   const p = prompts.find(x => x.id===curP);
-  $('#ptext').innerHTML = p ? fillHTML(p.body||'', pHosp) : '';
+  $('#ptext').innerHTML = p ? fillHTML(p.body||'', pHosp, pName) : '';
   const r = pHosp >= 0 ? ROWS[pHosp] : null;
   $('#pacts').innerHTML = `<button class="pbtn pri" data-pcopy>복사하기</button>${p && p.cat==='ai' ? '<a class="pbtn" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT 열기</a><a class="pbtn" href="https://claude.ai/new" target="_blank" rel="noopener">Claude 열기</a>' : ''}${r && r[F.tc] ? `<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener"><svg width="14" height="14"><use href="#i-chat"/></svg>카톡채널 열기</a>` : ''}${r && r[F.tel] ? `<a class="pbtn" href="tel:${esc(r[F.tel])}">전화 걸기</a>` : ''}${r && r[F.email] ? `<a class="pbtn" href="mailto:${esc(r[F.email])}">메일 쓰기</a>` : ''}`;
-  const miss = p ? missingVars(p.body, pHosp) : [];
+  const miss = p ? missingVars(p.body, pHosp, pName) : [];
   if (miss.length) $('#pacts').insertAdjacentHTML('beforeend', `<span class="psv">빈 항목: ${miss.map(esc).join(', ')}${miss.includes('데모링크')?' (위에서 데모 링크 입력)':''}</span>`);
 }
-function pickHosp(i){ pHosp = i; renderPSel(); renderPrev(); $('#phq').value = ''; $('#pdrop').classList.remove('open'); }
+function pickHosp(i){ pHosp = i; pName = ''; $('#phq').value = i >= 0 ? ROWS[i][F.name] : ''; renderPSel(); renderPrev(); $('#pdrop').classList.remove('open'); }
 function buildPromptUI(){
   $('#pcat').innerHTML = Object.entries(CATS).map(([k,t]) => `<option value="${k}">${t}</option>`).join('');
   $('#pvars').innerHTML = VARS.map(v => `<button data-var="${v}">{${v}}</button>`).join('');
@@ -1108,9 +1110,16 @@ function bindPrompts(){
   $('#pReset').addEventListener('click', () => { let n = 0; DEFAULT_PROMPTS.forEach(d => { if (!prompts.find(p => p.id===d.id)) { prompts.push({...d}); n++; } }); saveP(); renderPList(); toast(n ? `기본 프롬프트 ${n}개를 다시 추가했어요` : '기본 프롬프트가 모두 있어요'); });
   ['pfName','pfContact','pfPort','pfKakao','pfDemo'].forEach(id => $('#'+id).addEventListener('input', () => { profile = { name: $('#pfName').value, contact: $('#pfContact').value, port: $('#pfPort').value, kakao: $('#pfKakao').value, demo: $('#pfDemo').value }; saveProf(); renderPrev(); }));
   $('#psel').addEventListener('input', e => { if (e.target.id !== 'pDemo') return; const i = +e.target.dataset.demoI; clearTimeout(e.target._t); e.target._t = setTimeout(() => { setLead(i, { demo: e.target.value.trim() }); renderPrev(); }, 300); });
-  $('#pacts').addEventListener('click', e => { if (!e.target.closest('[data-pcopy]')) return; const p = prompts.find(x => x.id===curP); if (p) copy(fillText(p.body||'', pHosp), '복사했어요. 카톡·메일·AI에 붙여넣으세요'); });
+  $('#pacts').addEventListener('click', e => { if (!e.target.closest('[data-pcopy]')) return; const p = prompts.find(x => x.id===curP); if (p) copy(fillText(p.body||'', pHosp, pName), '복사했어요. 카톡·메일·AI에 붙여넣으세요'); });
+  $('#psel').addEventListener('input', e => { if (e.target.id !== 'pDemoTmp') return; pDemoTmp = e.target.value.trim(); renderPrev(); });
   $('#psel').addEventListener('click', e => { if (e.target.closest('[data-unsel]')) pickHosp(-1); });
   let hT;
+  $('#phq').addEventListener('input', e => {
+    const v = e.target.value;
+    if (pHosp >= 0 && v !== ROWS[pHosp][F.name]) { pHosp = -1; pName = v.trim(); renderPSel(); }
+    else if (pHosp < 0) { const was = !!pName; pName = v.trim(); if (was !== !!pName) renderPSel(); }
+    renderPrev();
+  });
   $('#phq').addEventListener('input', e => { clearTimeout(hT); hT = setTimeout(() => { const q = e.target.value.trim().toLowerCase(); if (q.length < 1) { $('#pdrop').classList.remove('open'); return; } const out = []; const pool = result.length ? result : []; for (const i of pool) { if (ROWS[i][F.name].toLowerCase().includes(q)) { out.push(i); if (out.length >= 30) break; } } if (out.length < 30) for (let i=0;i<N && out.length<30;i++) if (!out.includes(i) && ROWS[i][F.name].toLowerCase().includes(q)) out.push(i); $('#pdrop').innerHTML = out.length ? out.map(i => `<button data-ph="${i}">${esc(ROWS[i][F.name])}<small>${esc(sidoName(i))} ${esc(ROWS[i][F.sggu])} · ${typeName(i)}${ROWS[i][F.tc]?' · 카톡':''}</small></button>`).join('') : '<div style="padding:12px;color:var(--mut);font-size:12.5px">검색 결과가 없어요</div>'; $('#pdrop').classList.add('open'); }, 150); });
   $('#pdrop').addEventListener('click', e => { const b = e.target.closest('[data-ph]'); if (b) pickHosp(+b.dataset.ph); });
   document.addEventListener('click', e => { if (!e.target.closest('.psearch')) $('#pdrop').classList.remove('open'); });
