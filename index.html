@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NO-SITE CLINIC · 홈페이지 없는 병원 찾기 | Owen Web</title>
+<meta name="description" content="전국 병·의원 중 홈페이지가 없는 곳만 지도와 목록으로 찾아주는 영업 리드 도구">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<style>
+:root{
+  --bg:#0b131f; --bg2:#0f1a2a; --panel:#121e30; --line:#1f2d44; --line2:#2a3b57;
+  --txt:#e8edf5; --mut:#8a97ad; --dim:#5d6b82;
+  --gold:#d4af37; --gold2:#f0d27a; --goldbg:rgba(212,175,55,.12);
+  --red:#ef6b6b; --green:#46c98b; --blue:#5aa2ff; --violet:#a78bfa; --orange:#f59e0b;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#24344f;border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+
+/* top */
+.top{height:60px;display:flex;align-items:center;gap:18px;padding:0 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0e1828,#0b131f)}
+.brand{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#8a6d1c);display:grid;place-items:center;color:#0b131f;font-weight:900;font-size:15px;box-shadow:0 4px 18px rgba(212,175,55,.3)}
+.brand b{font-size:15px;letter-spacing:.06em}
+.brand small{display:block;color:var(--mut);font-size:11px;letter-spacing:0;margin-top:1px}
+.kpis{display:flex;gap:8px;margin-left:auto;align-items:center}
+.kpi{padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg2);line-height:1.15}
+.kpi span{display:block;color:var(--mut);font-size:10.5px}
+.kpi b{font-size:15px;font-variant-numeric:tabular-nums}
+.kpi.g b{color:var(--gold2)}
+.tbtn{height:36px;padding:0 13px;border-radius:10px;border:1px solid var(--line2);background:var(--bg2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:.15s}
+.tbtn:hover{border-color:var(--gold);color:var(--gold2)}
+.tbtn.pri{background:var(--gold);color:#0b131f;border-color:var(--gold);font-weight:700}
+.tbtn.pri:hover{background:var(--gold2);color:#0b131f}
+.tbtn svg{width:15px;height:15px}
+
+/* layout */
+.app{display:grid;grid-template-columns:300px 430px 1fr;height:calc(100vh - 60px);height:calc(100dvh - 60px)}
+.side{border-right:1px solid var(--line);overflow:auto;padding:16px 16px 40px;background:var(--bg)}
+.listcol{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--bg2)}
+.mapcol{position:relative;min-height:0}
+#map{position:absolute;inset:0;background:#0a111b}
+
+.fg{margin-bottom:18px}
+.fl{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--mut);font-weight:600;letter-spacing:.04em;margin-bottom:8px}
+.fl a{color:var(--gold);font-weight:500;cursor:pointer}
+.inp,.sel{width:100%;height:40px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);padding:0 12px;outline:none;transition:.15s}
+.inp:focus,.sel:focus{border-color:var(--gold)}
+.sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a97ad' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.sel option{background:#121e30}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);font-size:12.5px;cursor:pointer;user-select:none;transition:.12s;display:inline-flex;gap:5px;align-items:center}
+.chip i{font-style:normal;color:var(--dim);font-size:11px;font-variant-numeric:tabular-nums}
+.chip:hover{border-color:#3a4d6d}
+.chip.on{background:var(--goldbg);border-color:var(--gold);color:var(--gold2)}
+.chip.on i{color:var(--gold)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;height:36px;cursor:pointer;font-size:12.5px;color:var(--mut);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--goldbg);color:var(--gold2);font-weight:700}
+.tog{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--txt);padding:4px 0}
+.tog input{display:none}
+.tog .sw{width:34px;height:20px;border-radius:20px;background:#22324d;position:relative;transition:.15s;flex:none}
+.tog .sw:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#8a97ad;top:3px;left:3px;transition:.15s}
+.tog input:checked+.sw{background:var(--gold)}
+.tog input:checked+.sw:after{left:17px;background:#0b131f}
+.note{font-size:11.5px;color:var(--dim);line-height:1.6;border-top:1px solid var(--line);padding-top:14px;margin-top:6px}
+.note b{color:var(--mut)}
+
+/* list */
+.lhead{padding:14px 16px 12px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.lhead .cnt{font-size:13px;color:var(--mut)}
+.lhead .cnt b{color:var(--txt);font-size:18px;font-variant-numeric:tabular-nums;margin-right:2px}
+.lhead .sel{width:auto;height:34px;margin-left:auto;font-size:12.5px}
+.list{flex:1;overflow:auto;padding:10px 10px 30px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:.12s;position:relative}
+.card:hover{border-color:#34476a}
+.card.act{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.ct{display:flex;gap:8px;align-items:flex-start}
+.ct h3{font-size:15px;font-weight:700;line-height:1.35;flex:1;word-break:keep-all}
+.star{border:0;background:none;cursor:pointer;color:var(--dim);font-size:17px;line-height:1;padding:2px}
+.star.on{color:var(--gold)}
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 8px}
+.bd{font-size:11px;padding:3px 7px;border-radius:6px;background:#1a2840;color:#aab6ca;font-weight:600}
+.bd.new{background:rgba(70,201,139,.14);color:var(--green)}
+.bd.sns{background:rgba(167,139,250,.14);color:var(--violet)}
+.bd.st{background:var(--goldbg);color:var(--gold2)}
+.addr{color:var(--mut);font-size:12.5px;line-height:1.5}
+.meta{display:flex;gap:12px;margin-top:6px;font-size:12.5px;color:#b6c1d3;flex-wrap:wrap}
+.meta a{color:var(--gold2)}
+.meta a:hover{text-decoration:underline}
+.more{width:100%;height:42px;border-radius:10px;border:1px dashed var(--line2);background:none;color:var(--mut);cursor:pointer;margin-top:4px}
+.more:hover{border-color:var(--gold);color:var(--gold2)}
+.empty{padding:60px 20px;text-align:center;color:var(--mut);line-height:1.7}
+
+/* detail drawer */
+.det{position:absolute;top:14px;right:14px;bottom:14px;width:380px;max-width:calc(100% - 28px);background:rgba(15,26,42,.97);backdrop-filter:blur(10px);border:1px solid var(--line2);border-radius:16px;z-index:800;display:flex;flex-direction:column;transform:translateX(calc(100% + 30px));transition:transform .28s cubic-bezier(.2,.8,.2,1);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.det.open{transform:none}
+.dh{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.dh .x{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-size:16px}
+.dh h2{font-size:19px;padding-right:40px;line-height:1.35;word-break:keep-all}
+.db{padding:14px 18px;overflow:auto;flex:1}
+.kv{display:grid;grid-template-columns:76px 1fr;gap:9px 10px;font-size:13px;margin-bottom:16px}
+.kv dt{color:var(--mut)}
+.kv dd{word-break:break-all;line-height:1.45}
+.kv dd a{color:var(--gold2)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px}
+.acts a,.acts button{height:38px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;cursor:pointer;transition:.12s}
+.acts a:hover,.acts button:hover{border-color:var(--gold);color:var(--gold2)}
+.acts .wide{grid-column:span 2;background:var(--gold);color:#0b131f;border-color:var(--gold);font-weight:700}
+.acts .wide:hover{background:var(--gold2);color:#0b131f}
+.stl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.stl button{padding:7px 11px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-size:12.5px}
+.stl button.on{border-color:currentColor;font-weight:700}
+textarea.memo{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);padding:10px 12px;outline:none;resize:vertical;line-height:1.5}
+textarea.memo:focus{border-color:var(--gold)}
+.sv{font-size:11.5px;color:var(--dim);margin-top:6px;height:14px}
+.h4{font-size:11.5px;color:var(--mut);font-weight:600;letter-spacing:.04em;margin:4px 0 8px}
+
+/* map ui */
+.mapbar{position:absolute;top:14px;left:14px;z-index:700;display:flex;gap:8px;flex-wrap:wrap}
+.mb{height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line2);background:rgba(15,26,42,.92);backdrop-filter:blur(6px);cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:12.5px;white-space:nowrap}
+.mb:hover{border-color:var(--gold)}
+.mb.on{border-color:var(--gold);color:var(--gold2);background:rgba(40,34,14,.92)}
+.legend{position:absolute;left:14px;bottom:24px;z-index:700;background:rgba(15,26,42,.92);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-size:11.5px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;max-width:calc(100% - 28px)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.85)}
+.pin{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+.pin.sel{width:20px;height:20px;border-color:var(--gold);box-shadow:0 0 0 4px rgba(212,175,55,.35)}
+.marker-cluster{background:rgba(212,175,55,.22)!important}
+.marker-cluster div{background:rgba(212,175,55,.85)!important;color:#0b131f!important;font-weight:800;font-family:inherit}
+.marker-cluster span{line-height:30px}
+.leaflet-container{font-family:inherit}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#121e30;color:var(--txt);border:1px solid var(--line2)}
+.leaflet-control-zoom a{background:#121e30!important;color:var(--txt)!important;border-color:var(--line2)!important}
+.leaflet-control-attribution{background:rgba(11,19,31,.8)!important;color:#5d6b82!important}
+.leaflet-control-attribution a{color:#8a97ad!important}
+
+/* loader */
+.loader{position:fixed;inset:0;background:var(--bg);z-index:3000;display:grid;place-items:center;transition:opacity .4s}
+.loader.hide{opacity:0;pointer-events:none}
+.lbox{text-align:center;width:280px}
+.lbox .logo{width:56px;height:56px;font-size:24px;border-radius:15px;margin:0 auto 18px}
+.lbox p{color:var(--mut);font-size:13px;margin-top:10px}
+.bar{height:4px;background:#1a2840;border-radius:4px;overflow:hidden;margin-top:18px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .2s}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(3,7,13,.7);backdrop-filter:blur(4px);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--line2);border-radius:18px;width:100%;max-width:760px;max-height:88vh;overflow:auto;padding:26px 26px 22px;position:relative}
+.mbox h2{font-size:20px;margin-bottom:6px}
+.mbox .sub{color:var(--mut);font-size:13px;margin-bottom:20px;line-height:1.6}
+.mbox .x{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-size:17px}
+.bars{display:grid;gap:9px}
+.br{display:grid;grid-template-columns:90px 1fr 120px;gap:12px;align-items:center;font-size:13px}
+.br .tr{height:22px;border-radius:6px;background:#1a2840;overflow:hidden;display:flex}
+.br .tr i{display:block;height:100%}
+.br .num{text-align:right;color:var(--mut);font-variant-numeric:tabular-nums;font-size:12.5px}
+.br .num b{color:var(--txt)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.sc{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px}
+.sc span{color:var(--mut);font-size:11.5px}
+.sc b{display:block;font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
+.sc.g b{color:var(--gold2)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left}
+.tbl th{color:var(--mut);font-weight:600;font-size:11.5px}
+.tbl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);background:var(--gold);color:#0b131f;font-weight:700;padding:11px 18px;border-radius:10px;z-index:4000;opacity:0;transition:.25s;pointer-events:none;font-size:13px}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* mobile */
+.mnav{display:none}
+@media (max-width:1180px){.app{grid-template-columns:270px 380px 1fr}.kpi.h{display:none}}
+@media (max-width:900px){
+  .top{height:56px;padding:0 12px;gap:10px}
+  .brand small,.kpis .kpi{display:none}
+  .kpis .tbtn span{display:none}
+  .kpis .tbtn{padding:0 10px}
+  .app{display:block;height:calc(100dvh - 56px - 58px);position:relative}
+  .side,.listcol,.mapcol{position:absolute;inset:0;display:none;border:0}
+  .app[data-v="filter"] .side{display:block}
+  .app[data-v="list"] .listcol{display:flex}
+  .app[data-v="map"] .mapcol{display:block}
+  .mnav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;height:58px;background:#0e1828;border-top:1px solid var(--line);z-index:1500;padding-bottom:env(safe-area-inset-bottom)}
+  .mnav button{border:0;background:none;color:var(--mut);font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+  .mnav button svg{width:20px;height:20px}
+  .mnav button.on{color:var(--gold2)}
+  .det{position:fixed;top:auto;left:0;right:0;bottom:0;width:100%;max-width:none;height:82dvh;border-radius:18px 18px 0 0;transform:translateY(105%);z-index:1800}
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .br{grid-template-columns:70px 1fr 96px}
+  .legend{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader"><div class="lbox"><div class="logo">N</div><b>전국 병·의원 데이터 불러오는 중</b><div class="bar"><i id="lbar"></i></div><p id="lmsg">0%</p></div></div>
+
+<header class="top">
+  <div class="brand"><div class="logo">N</div><div><b>NO-SITE CLINIC</b><small>홈페이지 없는 병원 찾기 · Owen Web</small></div></div>
+  <div class="kpis">
+    <div class="kpi h"><span>전국 대상 기관</span><b id="kAll">-</b></div>
+    <div class="kpi g"><span>현재 조건 결과</span><b id="kRes">-</b></div>
+    <div class="kpi h"><span>내 리드</span><b id="kLead">0</b></div>
+    <button class="tbtn" id="btnStats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span>통계</span></button>
+    <button class="tbtn pri" id="btnCsv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span>엑셀(CSV) 받기</span></button>
+  </div>
+</header>
+
+<main class="app" id="app" data-v="list">
+  <aside class="side" id="side">
+    <div class="fg">
+      <div class="fl">검색</div>
+      <input class="inp" id="q" placeholder="병원명, 주소, 전화번호" autocomplete="off">
+    </div>
+    <div class="fg">
+      <div class="fl">지역</div>
+      <div class="row2"><select class="sel" id="sido"></select><select class="sel" id="sggu"></select></div>
+    </div>
+    <div class="fg">
+      <div class="fl">종별 <a id="typeAll">전체 해제</a></div>
+      <div class="chips" id="types"></div>
+    </div>
+    <div class="fg">
+      <div class="fl">진료과목</div>
+      <select class="sel" id="dept"></select>
+      <label class="tog" style="margin-top:8px"><input type="checkbox" id="specOnly"><span class="sw"></span>전문의가 있는 과목만</label>
+    </div>
+    <div class="fg">
+      <div class="fl">홈페이지 상태</div>
+      <div class="seg" id="hp"><button data-v="all" class="on">전체</button><button data-v="0">완전 없음</button><button data-v="1">블로그·SNS만</button></div>
+    </div>
+    <div class="fg">
+      <div class="fl">개원 시기</div>
+      <select class="sel" id="opened">
+        <option value="0">전체</option><option value="3">최근 3개월</option><option value="6">최근 6개월</option><option value="12">최근 1년</option><option value="36">최근 3년</option><option value="-120">10년 이상 된 곳</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl">의사 수</div>
+      <div class="seg" id="docs"><button data-v="0" class="on">전체</button><button data-v="2">2명+</button><button data-v="3">3명+</button><button data-v="5">5명+</button></div>
+    </div>
+    <div class="fg">
+      <div class="fl">영업 상태</div>
+      <select class="sel" id="lead">
+        <option value="all">전체</option><option value="none">아직 안 건드린 곳</option><option value="any">내 리드 전체</option>
+      </select>
+      <label class="tog" style="margin-top:8px"><input type="checkbox" id="hideDrop" checked><span class="sw"></span>제외·홈페이지 확인된 곳 숨기기</label>
+    </div>
+    <div class="fg">
+      <button class="tbtn" id="reset" style="width:100%;justify-content:center">필터 초기화</button>
+    </div>
+    <div class="note"><b>데이터</b> 건강보험심사평가원 「전국 병의원 및 약국 현황」 2026.9. 기준 (공공누리 1유형). 심평원에 홈페이지가 등록되지 않은 곳을 보여줘요. 신고만 안 한 곳도 있을 수 있으니 연락 전에 <b>네이버 확인</b> 버튼으로 한 번 체크하세요. 보건소·보건지소는 제외했어요.<br><br><b>영업 기록</b>(관심·상태·메모)은 이 브라우저에만 저장돼요.</div>
+  </aside>
+
+  <section class="listcol" id="listcol">
+    <div class="lhead">
+      <div class="cnt"><b id="cnt">0</b>곳</div>
+      <select class="sel" id="sort">
+        <option value="new">최근 개원순</option><option value="old">오래된 순</option><option value="docs">의사 많은 순</option><option value="name">이름순</option><option value="near">지도 중심 가까운 순</option>
+      </select>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="mapcol" id="mapcol">
+    <div id="map"></div>
+    <div class="mapbar">
+      <button class="mb" id="bBounds"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>지도 영역만 목록에</button>
+      <button class="mb" id="bLoc"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>내 위치</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="det" id="det"></div>
+  </section>
+</main>
+
+<nav class="mnav" id="mnav">
+  <button data-v="filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>필터</button>
+  <button data-v="list" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>목록</button>
+  <button data-v="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>지도</button>
+</nav>
+
+<div class="modal" id="mStats"><div class="mbox" id="statsBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => n.toLocaleString('ko-KR');
+
+// fields
+const F = {name:0,type:1,sido:2,sggu:3,addr:4,tel:5,open:6,docs:7,x:8,y:9,st:10,url:11,dAll:12,dSpec:13};
+const SIDO_ORDER = ['서울','경기','인천','부산','대구','광주','대전','울산','세종시','강원','충북','충남','전북','전남','전남광주','경북','경남','제주'];
+const TYPE_COLOR = {'의원':'#5aa2ff','치과의원':'#46c98b','한의원':'#f59e0b','병원':'#ef6b6b','요양병원':'#a78bfa','한방병원':'#f97316','치과병원':'#2dd4bf','정신병원':'#ec4899','종합병원':'#e11d48','상급종합':'#be123c','조산원':'#94a3b8'};
+const LEAD = {
+  fav:{t:'관심',c:'#d4af37'}, call:{t:'연락함',c:'#5aa2ff'}, talk:{t:'상담중',c:'#a78bfa'},
+  won:{t:'계약',c:'#46c98b'}, has:{t:'홈페이지 있음',c:'#8a97ad'}, drop:{t:'제외',c:'#ef6b6b'}
+};
+const LS = 'nosite-leads-v1';
+
+let DATA, META, ROWS, N;
+let leads = {};
+try { leads = JSON.parse(localStorage.getItem(LS) || '{}'); } catch { leads = {}; }
+const saveLeads = () => { localStorage.setItem(LS, JSON.stringify(leads)); $('#kLead').textContent = fmt(Object.keys(leads).filter(k => leads[k].s || leads[k].m || leads[k].star).length); };
+
+const st = { q:'', sido:'', sggu:'', types:new Set(), dept:'', spec:false, hp:'all', opened:0, docs:0, lead:'all', hideDrop:true, sort:'new', bounds:false };
+let result = [], shown = 0, PAGE = 60, selIdx = -1;
+const now = new Date();
+const ymd = d => d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate();
+const TODAY = ymd(now);
+const monthsAgo = m => { const d = new Date(now); d.setMonth(d.getMonth() - m); return ymd(d); };
+const keyOf = i => ROWS[i][F.name] + '|' + ROWS[i][F.tel] + '|' + ROWS[i][F.sggu];
+const sidoName = i => { const s = META.sidos[ROWS[i][F.sido]]; return s === '세종시' ? '세종' : s; };
+const typeName = i => META.types[ROWS[i][F.type]];
+const openStr = v => v ? `${String(v).slice(0,4)}.${String(v).slice(4,6)}.${String(v).slice(6,8)}` : '-';
+const monthsSince = v => { if (!v) return 9999; const y = Math.floor(v/10000), m = Math.floor(v/100)%100; return (now.getFullYear()-y)*12 + (now.getMonth()+1-m); };
+const hasCode = (s, c) => { for (let k = 0; k < s.length; k += 2) if (s[k] === c[0] && s[k+1] === c[1]) return true; return false; };
+const deptList = s => { const o = []; for (let k = 0; k < s.length; k += 2) { const c = s.slice(k, k+2); if (META.depts[c]) o.push(META.depts[c]); } return o; };
+function ageLabel(v){ const m = monthsSince(v); if (m <= 0) return '이번 달 개원'; if (m < 12) return `개원 ${m}개월`; return `개원 ${Math.floor(m/12)}년차`; }
+const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1800); };
+
+// ---------- load ----------
+async function load(){
+  const res = await fetch('data.json');
+  const total = 12.9e6;
+  const reader = res.body.getReader(); const chunks = []; let got = 0;
+  while (true) {
+    const {done, value} = await reader.read(); if (done) break;
+    chunks.push(value); got += value.length;
+    const p = total ? Math.min(99, Math.round(got/total*100)) : Math.min(95, Math.round(got/3e6*100));
+    $('#lbar').style.width = p + '%'; $('#lmsg').textContent = total ? p + '%' : (got/1e6).toFixed(1) + 'MB';
+  }
+  const buf = new Uint8Array(got); let o = 0; for (const c of chunks) { buf.set(c, o); o += c.length; }
+  DATA = JSON.parse(new TextDecoder().decode(buf));
+  META = DATA.meta; ROWS = DATA.rows; N = ROWS.length;
+  $('#lbar').style.width = '100%'; $('#lmsg').textContent = '지도 준비 중';
+}
+
+// ---------- filters UI ----------
+function buildUI(){
+  $('#kAll').textContent = fmt(N);
+  const sidoCnt = {}; ROWS.forEach(r => sidoCnt[r[F.sido]] = (sidoCnt[r[F.sido]]||0)+1);
+  const so = s => { const k = SIDO_ORDER.indexOf(s); return k < 0 ? 999 : k; };
+  const sidoIdx = META.sidos.map((s,i)=>i).sort((a,b)=> so(META.sidos[a]) - so(META.sidos[b]));
+  $('#sido').innerHTML = `<option value="">전국 (${fmt(N)})</option>` + sidoIdx.map(i => `<option value="${i}">${META.sidos[i]==='세종시'?'세종':META.sidos[i]} (${fmt(sidoCnt[i]||0)})</option>`).join('');
+  fillSggu();
+  const tCnt = {}; ROWS.forEach(r => tCnt[r[F.type]] = (tCnt[r[F.type]]||0)+1);
+  const tOrder = META.types.map((t,i)=>i).sort((a,b)=>(tCnt[b]||0)-(tCnt[a]||0));
+  $('#types').innerHTML = tOrder.map(i => `<span class="chip" data-t="${i}"><span class="dot" style="background:${TYPE_COLOR[META.types[i]]||'#888'};width:8px;height:8px;border:0"></span>${META.types[i]} <i>${fmt(tCnt[i]||0)}</i></span>`).join('');
+  const groups = { '의과':[], '치과':[], '한방':[] };
+  Object.entries(META.depts).forEach(([c,n]) => { const k = +c; (k>=80?groups['한방']:k>=49&&k<80?groups['치과']:groups['의과']).push([c,n]); });
+  $('#dept').innerHTML = `<option value="">전체 과목</option>` + Object.entries(groups).map(([g,a]) => `<optgroup label="${g}">${a.map(([c,n])=>`<option value="${c}">${n}</option>`).join('')}</optgroup>`).join('');
+  $('#legend').innerHTML = tOrder.slice(0,7).map(i => `<span><i class="dot" style="background:${TYPE_COLOR[META.types[i]]}"></i>${META.types[i]}</span>`).join('');
+}
+function fillSggu(){
+  if (st.sido === '') { $('#sggu').innerHTML = '<option value="">시·군·구 전체</option>'; $('#sggu').disabled = true; return; }
+  const c = {}; const sd = +st.sido;
+  for (const r of ROWS) if (r[F.sido] === sd) c[r[F.sggu]] = (c[r[F.sggu]]||0)+1;
+  $('#sggu').disabled = false;
+  $('#sggu').innerHTML = '<option value="">시·군·구 전체</option>' + Object.keys(c).sort((a,b)=>a.localeCompare(b,'ko')).map(g => `<option value="${esc(g)}">${esc(g)} (${fmt(c[g])})</option>`).join('');
+}
+
+// ---------- filter ----------
+function apply(keepSel){
+  const q = st.q.trim().toLowerCase().replace(/\s+/g,' ');
+  const qd = q.replace(/[^0-9]/g,'');
+  const sd = st.sido === '' ? -1 : +st.sido;
+  const ty = st.types.size ? st.types : null;
+  let minOpen = 0, maxOpen = 99999999;
+  if (st.opened > 0) minOpen = monthsAgo(st.opened);
+  if (st.opened < 0) maxOpen = monthsAgo(-st.opened);
+  const b = st.bounds ? map.getBounds() : null;
+  const out = [];
+  for (let i = 0; i < N; i++) {
+    const r = ROWS[i];
+    if (sd >= 0 && r[F.sido] !== sd) continue;
+    if (st.sggu && r[F.sggu] !== st.sggu) continue;
+    if (ty && !ty.has(r[F.type])) continue;
+    if (st.hp !== 'all' && r[F.st] !== +st.hp) continue;
+    if (st.opened && (r[F.open] < minOpen || r[F.open] > maxOpen || !r[F.open])) continue;
+    if (st.docs && r[F.docs] < st.docs) continue;
+    if (st.dept && !hasCode(st.spec ? r[F.dSpec] : r[F.dAll], st.dept)) continue;
+    const L = leads[keyOf(i)];
+    if (st.hideDrop && L && (L.s === 'drop' || L.s === 'has')) continue;
+    if (st.lead === 'none' && L && (L.s || L.star)) continue;
+    if (st.lead === 'any' && !(L && (L.s || L.star || L.m))) continue;
+    if (q) {
+      const hay = (r[F.name] + ' ' + r[F.addr]).toLowerCase();
+      if (!q.split(' ').every(w => hay.includes(w)) && !(qd.length >= 4 && r[F.tel].replace(/-/g,'').includes(qd))) continue;
+    }
+    if (b && !(r[F.y] && b.contains([r[F.y], r[F.x]]))) continue;
+    out.push(i);
+  }
+  sortRes(out);
+  result = out; shown = 0;
+  $('#cnt').textContent = fmt(out.length); $('#kRes').textContent = fmt(out.length);
+  $('#list').innerHTML = ''; $('#list').scrollTop = 0;
+  renderMore();
+  if (!st.bounds) drawMarkers();
+  if (!keepSel) closeDet();
+}
+function sortRes(a){
+  const s = st.sort;
+  if (s === 'new') a.sort((x,y) => ROWS[y][F.open] - ROWS[x][F.open]);
+  else if (s === 'old') a.sort((x,y) => (ROWS[x][F.open]||99999999) - (ROWS[y][F.open]||99999999));
+  else if (s === 'docs') a.sort((x,y) => ROWS[y][F.docs] - ROWS[x][F.docs]);
+  else if (s === 'name') a.sort((x,y) => ROWS[x][F.name].localeCompare(ROWS[y][F.name],'ko'));
+  else if (s === 'near') {
+    const c = map.getCenter(), cl = Math.cos(c.lat*Math.PI/180);
+    const d = i => { const r = ROWS[i]; if (!r[F.y]) return 1e9; const dy = r[F.y]-c.lat, dx = (r[F.x]-c.lng)*cl; return dx*dx+dy*dy; };
+    const dd = new Float64Array(N); a.forEach(i => dd[i] = d(i)); a.sort((x,y)=>dd[x]-dd[y]);
+  }
+}
+
+// ---------- list ----------
+function cardHTML(i){
+  const r = ROWS[i], L = leads[keyOf(i)] || {};
+  const m = monthsSince(r[F.open]);
+  const spec = deptList(r[F.dSpec]).slice(0,3);
+  return `<div class="card${i===selIdx?' act':''}" data-i="${i}">
+    <div class="ct"><h3>${esc(r[F.name])}</h3><button class="star${L.star?' on':''}" data-star="${i}" title="관심 표시">${L.star?'★':'☆'}</button></div>
+    <div class="badges">
+      <span class="bd" style="color:${TYPE_COLOR[typeName(i)]}">${typeName(i)}</span>
+      ${m <= 12 ? `<span class="bd new">신규 · ${ageLabel(r[F.open])}</span>` : `<span class="bd">${ageLabel(r[F.open])}</span>`}
+      ${r[F.st]===1 ? '<span class="bd sns">블로그·SNS만</span>' : ''}
+      ${spec.length ? `<span class="bd">${esc(spec.join('·'))}</span>` : ''}
+      ${L.s ? `<span class="bd st" style="color:${LEAD[L.s].c}">${LEAD[L.s].t}</span>` : ''}
+    </div>
+    <div class="addr">${esc(r[F.addr])}</div>
+    <div class="meta">${r[F.tel] ? `<a href="tel:${esc(r[F.tel])}" data-stop>${esc(r[F.tel])}</a>` : '<span>전화 미등록</span>'}<span>의사 ${r[F.docs]}명</span><span>개설 ${openStr(r[F.open])}</span></div>
+  </div>`;
+}
+function renderMore(){
+  const list = $('#list');
+  list.querySelector('.more')?.remove();
+  if (!result.length) { list.innerHTML = `<div class="empty">조건에 맞는 병원이 없어요.<br>필터를 조금 넓혀보세요.</div>`; return; }
+  const end = Math.min(result.length, shown + PAGE);
+  let h = ''; for (let k = shown; k < end; k++) h += cardHTML(result[k]);
+  list.insertAdjacentHTML('beforeend', h); shown = end;
+  if (shown < result.length) list.insertAdjacentHTML('beforeend', `<button class="more">더 보기 (${fmt(result.length - shown)}곳 남음)</button>`);
+}
+function refreshCard(i){
+  const el = $(`.card[data-i="${i}"]`); if (!el) return;
+  el.outerHTML = cardHTML(i);
+}
+
+// ---------- map ----------
+let map, cluster, markers = new Array(0), selMarker = null;
+function initMap(){
+  map = L.map('map', { zoomControl:true, preferCanvas:true, minZoom:6, maxZoom:19 }).setView([36.35, 127.8], 7);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution:'&copy; OpenStreetMap &copy; CARTO', subdomains:'abcd', maxZoom:19 }).addTo(map);
+  cluster = L.markerClusterGroup({ chunkedLoading:true, chunkInterval:120, showCoverageOnHover:false, maxClusterRadius:55, spiderfyOnMaxZoom:true, disableClusteringAtZoom:17 });
+  map.addLayer(cluster);
+  markers = new Array(N);
+  map.on('moveend', () => { if (st.bounds) apply(true); });
+}
+const iconCache = {};
+function iconFor(i){
+  const L0 = leads[keyOf(i)];
+  const c = L0 && L0.s ? LEAD[L0.s].c : (TYPE_COLOR[typeName(i)] || '#888');
+  return iconCache[c] || (iconCache[c] = L.divIcon({ className:'', html:`<div class="pin" style="background:${c}"></div>`, iconSize:[14,14], iconAnchor:[7,7] }));
+}
+function markerFor(i){
+  if (markers[i]) return markers[i];
+  const r = ROWS[i]; if (!r[F.y]) return null;
+  const m = L.marker([r[F.y], r[F.x]], { icon: iconFor(i), title: r[F.name] });
+  m._i = i; m.on('click', () => select(i, false));
+  return markers[i] = m;
+}
+function drawMarkers(){
+  cluster.clearLayers();
+  const arr = []; for (const i of result) { const m = markerFor(i); if (m) arr.push(m); }
+  cluster.addLayers(arr);
+}
+
+// ---------- detail ----------
+function select(i, fly){
+  selIdx = i;
+  $$('.card.act').forEach(e => e.classList.remove('act'));
+  const card = $(`.card[data-i="${i}"]`); if (card) { card.classList.add('act'); if (!fly) card.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+  const r = ROWS[i];
+  if (selMarker) { map.removeLayer(selMarker); selMarker = null; }
+  if (r[F.y]) {
+    selMarker = L.marker([r[F.y], r[F.x]], { icon: L.divIcon({ className:'', html:'<div class="pin sel" style="background:#d4af37"></div>', iconSize:[20,20], iconAnchor:[10,10] }), zIndexOffset:9999, interactive:false }).addTo(map);
+    if (fly) map.flyTo([r[F.y], r[F.x]], Math.max(map.getZoom(), 16), { duration:.6 });
+  }
+  renderDet(i);
+}
+function renderDet(i){
+  const r = ROWS[i], k = keyOf(i), L0 = leads[k] || {};
+  const nm = r[F.name], short = r[F.addr].split(',')[0];
+  const naverMap = 'https://map.naver.com/p/search/' + encodeURIComponent(nm + ' ' + short);
+  const kakao = 'https://map.kakao.com/?q=' + encodeURIComponent(nm + ' ' + short);
+  const naverQ = 'https://search.naver.com/search.naver?query=' + encodeURIComponent(sidoName(i) + ' ' + r[F.sggu] + ' ' + nm + ' 홈페이지');
+  const googleQ = 'https://www.google.com/search?q=' + encodeURIComponent(nm + ' ' + r[F.sggu] + ' ' + r[F.tel]);
+  const all = deptList(r[F.dAll]), spec = deptList(r[F.dSpec]);
+  $('#det').innerHTML = `
+    <div class="dh"><button class="x" data-close>✕</button>
+      <div class="badges" style="margin-top:0"><span class="bd" style="color:${TYPE_COLOR[typeName(i)]}">${typeName(i)}</span>${monthsSince(r[F.open])<=12?`<span class="bd new">신규 · ${ageLabel(r[F.open])}</span>`:''}${r[F.st]===1?'<span class="bd sns">블로그·SNS만 운영</span>':'<span class="bd" style="color:#ef6b6b">홈페이지 미등록</span>'}</div>
+      <h2>${esc(nm)}</h2>
+    </div>
+    <div class="db">
+      <dl class="kv">
+        <dt>주소</dt><dd>${esc(r[F.addr])}</dd>
+        <dt>전화</dt><dd>${r[F.tel]?`<a href="tel:${esc(r[F.tel])}">${esc(r[F.tel])}</a>`:'미등록'}</dd>
+        <dt>지역</dt><dd>${esc(sidoName(i))} ${esc(r[F.sggu])}</dd>
+        <dt>개설일</dt><dd>${openStr(r[F.open])} (${ageLabel(r[F.open])})</dd>
+        <dt>의사 수</dt><dd>${r[F.docs]}명</dd>
+        ${r[F.url]?`<dt>등록 채널</dt><dd><a href="${esc(/^https?:/i.test(r[F.url])?r[F.url]:'http://'+r[F.url])}" target="_blank" rel="noopener">${esc(r[F.url])}</a></dd>`:''}
+        <dt>전문의 과목</dt><dd>${spec.length?esc(spec.join(', ')):'-'}</dd>
+        <dt>진료과목</dt><dd style="color:var(--mut)">${all.length?esc(all.join(', ')):'-'}</dd>
+      </dl>
+      <div class="acts">
+        <a class="wide" href="${naverQ}" target="_blank" rel="noopener">네이버에서 홈페이지 있는지 확인</a>
+        <a href="${naverMap}" target="_blank" rel="noopener">네이버 지도</a>
+        <a href="${kakao}" target="_blank" rel="noopener">카카오맵</a>
+        <a href="${googleQ}" target="_blank" rel="noopener">구글 검색</a>
+        <button data-copy="${i}">정보 복사</button>
+      </div>
+      <div class="h4">영업 상태</div>
+      <div class="stl">${Object.entries(LEAD).map(([s,v])=>`<button data-st="${s}" class="${L0.s===s?'on':''}" style="${L0.s===s?`color:${v.c};background:${v.c}22`:''}">${v.t}</button>`).join('')}</div>
+      <div class="h4">메모</div>
+      <textarea class="memo" id="memo" placeholder="통화 내용, 원장님 성함, 다음 연락일 등">${esc(L0.m||'')}</textarea>
+      <div class="sv" id="sv">${L0.u?'마지막 수정 '+new Date(L0.u).toLocaleString('ko-KR'):''}</div>
+    </div>`;
+  $('#det').classList.add('open');
+  $('#det').dataset.i = i;
+}
+function closeDet(){ $('#det').classList.remove('open'); selIdx = -1; if (selMarker) { map.removeLayer(selMarker); selMarker = null; } $$('.card.act').forEach(e => e.classList.remove('act')); }
+function setLead(i, patch){
+  const k = keyOf(i); const L0 = Object.assign({}, leads[k] || {}, patch, { u: Date.now() });
+  if (!L0.s && !L0.m && !L0.star) delete leads[k]; else leads[k] = L0;
+  saveLeads();
+  if (markers[i]) markers[i].setIcon(iconFor(i));
+  refreshCard(i);
+}
+
+// ---------- csv ----------
+function csv(){
+  if (!result.length) return toast('내보낼 결과가 없어요');
+  const head = ['기관명','종별','시도','시군구','주소','전화번호','개설일','의사수','홈페이지 상태','등록 채널','전문의 과목','진료과목','영업 상태','관심','메모'];
+  const q = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+  const lines = [head.join(',')];
+  for (const i of result) {
+    const r = ROWS[i], L0 = leads[keyOf(i)] || {};
+    lines.push([r[F.name], typeName(i), sidoName(i), r[F.sggu], r[F.addr], r[F.tel], openStr(r[F.open]), r[F.docs], r[F.st]===1?'블로그·SNS만':'없음', r[F.url], deptList(r[F.dSpec]).join(' '), deptList(r[F.dAll]).join(' '), L0.s?LEAD[L0.s].t:'', L0.star?'★':'', L0.m||''].map(q).join(','));
+  }
+  const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const tag = [st.sido!==''?META.sidos[+st.sido]:'전국', st.sggu].filter(Boolean).join('_');
+  a.download = `홈페이지없는병원_${tag}_${result.length}곳.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(`${fmt(result.length)}곳 CSV로 저장했어요`);
+}
+
+// ---------- stats ----------
+function stats(){
+  const S = META.summary;
+  const order = Object.keys(S).sort((a,b)=>(S[b][0]+S[b][1]+S[b][2])-(S[a][0]+S[a][1]+S[a][2]));
+  let tot=[0,0,0]; order.forEach(t=>S[t].forEach((v,j)=>tot[j]+=v));
+  const all = tot[0]+tot[1]+tot[2];
+  const newCnt = ROWS.filter(r=>monthsSince(r[F.open])<=12).length;
+  const bySido = {}; ROWS.forEach(r=>{ const s=META.sidos[r[F.sido]]; bySido[s]=(bySido[s]||0)+1; });
+  const sidoRows = Object.entries(bySido).sort((a,b)=>b[1]-a[1]);
+  const max = sidoRows[0][1];
+  const sggu = {}; ROWS.forEach(r=>{ if (monthsSince(r[F.open])<=12){ const k=(META.sidos[r[F.sido]]==='세종시'?'세종':META.sidos[r[F.sido]])+' '+r[F.sggu]; sggu[k]=(sggu[k]||0)+1; } });
+  const hot = Object.entries(sggu).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  $('#statsBox').innerHTML = `<button class="x" data-mclose>✕</button>
+    <h2>전국 병·의원 홈페이지 현황</h2>
+    <div class="sub">${esc(META.source)} · 보건소류 제외 ${fmt(all)}곳 기준</div>
+    <div class="grid4">
+      <div class="sc"><span>전체 병·의원</span><b>${fmt(all)}</b></div>
+      <div class="sc g"><span>홈페이지 없음</span><b>${fmt(tot[0])}</b></div>
+      <div class="sc"><span>블로그·SNS만</span><b>${fmt(tot[1])}</b></div>
+      <div class="sc"><span>최근 1년 신규 (미보유)</span><b>${fmt(newCnt)}</b></div>
+    </div>
+    <div class="h4">종별 홈페이지 미보유율</div>
+    <div class="bars" style="margin-bottom:24px">${order.map(t=>{ const [a,b,c]=S[t], n=a+b+c, p=(a+b)/n*100; return `<div class="br"><span>${t}</span><div class="tr"><i style="width:${a/n*100}%;background:var(--gold)"></i><i style="width:${b/n*100}%;background:var(--violet)"></i><i style="width:${c/n*100}%;background:#2a3b57"></i></div><span class="num"><b>${p.toFixed(1)}%</b> · ${fmt(a+b)}/${fmt(n)}</span></div>`; }).join('')}</div>
+    <div class="legend" style="position:static;margin:-12px 0 22px;background:none;border:0;padding:0"><span><i class="dot" style="background:var(--gold);border:0"></i>없음</span><span><i class="dot" style="background:var(--violet);border:0"></i>블로그·SNS만</span><span><i class="dot" style="background:#2a3b57;border:0"></i>홈페이지 있음</span></div>
+    <div class="row2" style="gap:22px;align-items:start">
+      <div><div class="h4">지역별 미보유 기관 수</div><div class="bars">${sidoRows.map(([s,c])=>`<div class="br" style="grid-template-columns:62px 1fr 56px"><span>${s==='세종시'?'세종':s}</span><div class="tr"><i style="width:${c/max*100}%;background:linear-gradient(90deg,#8a6d1c,var(--gold))"></i></div><span class="num">${fmt(c)}</span></div>`).join('')}</div></div>
+      <div><div class="h4">신규 개원(1년) 미보유 많은 지역 TOP 10</div><table class="tbl"><tr><th>#</th><th>지역</th><th style="text-align:right">곳</th></tr>${hot.map(([k,c],j)=>`<tr><td>${j+1}</td><td><a href="#" data-hot="${esc(k)}" style="color:var(--gold2)">${esc(k)}</a></td><td class="n">${fmt(c)}</td></tr>`).join('')}</table></div>
+    </div>`;
+  $('#mStats').classList.add('open');
+}
+
+// ---------- events ----------
+let qT;
+function bind(){
+  $('#q').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { st.q = e.target.value; apply(); }, 220); });
+  $('#sido').addEventListener('change', e => { st.sido = e.target.value; st.sggu = ''; fillSggu(); apply(); fitResult(); });
+  $('#sggu').addEventListener('change', e => { st.sggu = e.target.value; apply(); fitResult(); });
+  $('#types').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; const t = +c.dataset.t; st.types.has(t) ? st.types.delete(t) : st.types.add(t); c.classList.toggle('on'); apply(); });
+  $('#typeAll').addEventListener('click', () => { st.types.clear(); $$('#types .chip').forEach(c=>c.classList.remove('on')); apply(); });
+  $('#dept').addEventListener('change', e => { st.dept = e.target.value; apply(); });
+  $('#specOnly').addEventListener('change', e => { st.spec = e.target.checked; if (st.dept) apply(); });
+  $('#hp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#hp button').forEach(x=>x.classList.toggle('on', x===b)); st.hp = b.dataset.v; apply(); });
+  $('#docs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#docs button').forEach(x=>x.classList.toggle('on', x===b)); st.docs = +b.dataset.v; apply(); });
+  $('#opened').addEventListener('change', e => { st.opened = +e.target.value; apply(); });
+  $('#lead').addEventListener('change', e => { st.lead = e.target.value; apply(); });
+  $('#hideDrop').addEventListener('change', e => { st.hideDrop = e.target.checked; apply(); });
+  $('#sort').addEventListener('change', e => { st.sort = e.target.value; apply(true); });
+  $('#reset').addEventListener('click', () => {
+    Object.assign(st, { q:'', sido:'', sggu:'', dept:'', spec:false, hp:'all', opened:0, docs:0, lead:'all', hideDrop:true, sort:'new' }); st.types.clear();
+    $('#q').value=''; $('#sido').value=''; fillSggu(); $('#dept').value=''; $('#specOnly').checked=false; $('#opened').value='0'; $('#lead').value='all'; $('#hideDrop').checked=true; $('#sort').value='new';
+    $$('#types .chip').forEach(c=>c.classList.remove('on')); $$('#hp button').forEach((b,j)=>b.classList.toggle('on',j===0)); $$('#docs button').forEach((b,j)=>b.classList.toggle('on',j===0));
+    apply(); map.setView([36.35,127.8],7);
+  });
+  $('#list').addEventListener('click', e => {
+    if (e.target.closest('[data-stop]')) return;
+    const s = e.target.closest('[data-star]'); if (s) { const i = +s.dataset.star; setLead(i, { star: !(leads[keyOf(i)]||{}).star }); if (+$('#det').dataset.i === i && $('#det').classList.contains('open')) renderDet(i); return; }
+    if (e.target.closest('.more')) return renderMore();
+    const c = e.target.closest('.card'); if (!c) return;
+    const i = +c.dataset.i; select(i, true);
+    if (innerWidth <= 900) setView('map');
+  });
+  $('#det').addEventListener('click', e => {
+    const i = +$('#det').dataset.i;
+    if (e.target.closest('[data-close]')) return closeDet();
+    const s = e.target.closest('[data-st]'); if (s) { const v = s.dataset.st; setLead(i, { s: (leads[keyOf(i)]||{}).s === v ? '' : v }); renderDet(i); return; }
+    const cp = e.target.closest('[data-copy]'); if (cp) { const r = ROWS[i]; navigator.clipboard.writeText(`${r[F.name]} (${typeName(i)})\n${r[F.addr]}\n${r[F.tel]}`).then(()=>toast('복사했어요')); }
+  });
+  $('#det').addEventListener('input', e => { if (e.target.id !== 'memo') return; const i = +$('#det').dataset.i; clearTimeout(e.target._t); e.target._t = setTimeout(() => { setLead(i, { m: e.target.value }); $('#sv').textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR'); }, 400); });
+  $('#bBounds').addEventListener('click', e => { st.bounds = !st.bounds; e.currentTarget.classList.toggle('on', st.bounds); if (!st.bounds) apply(true); else { apply(true); toast('지도를 움직이면 목록이 따라 바뀌어요'); } });
+  $('#bLoc').addEventListener('click', () => {
+    if (!navigator.geolocation) return toast('위치를 쓸 수 없는 브라우저예요');
+    navigator.geolocation.getCurrentPosition(p => { map.setView([p.coords.latitude, p.coords.longitude], 15); st.sort='near'; $('#sort').value='near'; L.circleMarker([p.coords.latitude,p.coords.longitude],{radius:7,color:'#fff',weight:2,fillColor:'#5aa2ff',fillOpacity:1}).addTo(map); setTimeout(()=>apply(true),400); }, () => toast('위치 권한이 필요해요'));
+  });
+  $('#btnCsv').addEventListener('click', csv);
+  $('#btnStats').addEventListener('click', stats);
+  $('#mStats').addEventListener('click', e => {
+    if (e.target === e.currentTarget || e.target.closest('[data-mclose]')) return $('#mStats').classList.remove('open');
+    const h = e.target.closest('[data-hot]'); if (h) { e.preventDefault(); const [s, ...g] = h.dataset.hot.split(' '); const si = META.sidos.findIndex(x => (x==='세종시'?'세종':x) === s); st.sido = String(si); $('#sido').value = st.sido; fillSggu(); st.sggu = g.join(' '); $('#sggu').value = st.sggu; st.opened = 12; $('#opened').value='12'; $('#mStats').classList.remove('open'); apply(); fitResult(); }
+  });
+  $('#mnav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#mStats').classList.remove('open'); closeDet(); } });
+}
+function setView(v){ $('#app').dataset.v = v; $$('#mnav button').forEach(b=>b.classList.toggle('on', b.dataset.v===v)); if (v==='map') setTimeout(()=>map.invalidateSize(), 50); }
+function fitResult(){
+  if (st.sido === '' && !st.sggu) { map.setView([36.35,127.8],7); return; }
+  let a=90,b=-90,c=180,d=-180,n=0;
+  for (const i of result) { const r = ROWS[i]; if (!r[F.y]) continue; n++; if (r[F.y]<a)a=r[F.y]; if (r[F.y]>b)b=r[F.y]; if (r[F.x]<c)c=r[F.x]; if (r[F.x]>d)d=r[F.x]; }
+  if (n) map.fitBounds([[a,c],[b,d]], { padding:[30,30], maxZoom:15 });
+}
+
+// ---------- boot ----------
+(async () => {
+  try {
+    await load();
+    initMap(); buildUI(); bind(); saveLeads();
+    apply();
+    setTimeout(() => $('#loader').classList.add('hide'), 150);
+  } catch (err) {
+    $('#lmsg').textContent = '데이터를 불러오지 못했어요. 새로고침 해주세요.'; console.error(err);
+  }
+})();
+})();
+</script>
+</body>
+</html>
