@@ -133,7 +133,7 @@ textarea.memo:focus{border-color:var(--gold)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.85)}
 .pin{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.6)}
-.pin.sel{width:20px;height:20px;border-color:var(--gold);box-shadow:0 0 0 4px rgba(212,175,55,.35)}
+.pin.pick{width:20px;height:20px;border-color:var(--gold);box-shadow:0 0 0 4px rgba(212,175,55,.35)}
 .marker-cluster{background:rgba(212,175,55,.22);border-radius:50%;background-clip:padding-box}
 .marker-cluster div{width:30px;height:30px;margin-left:5px;margin-top:5px;border-radius:50%;text-align:center;background:rgba(212,175,55,.92);color:#0b131f;font-weight:800;font-size:11.5px;font-family:inherit;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 .marker-cluster span{line-height:30px}
@@ -500,7 +500,7 @@ function select(i, fly){
   const r = ROWS[i];
   if (selMarker) { map.removeLayer(selMarker); selMarker = null; }
   if (r[F.y]) {
-    selMarker = L.marker([r[F.y], r[F.x]], { icon: L.divIcon({ className:'', html:'<div class="pin sel" style="background:#d4af37"></div>', iconSize:[20,20], iconAnchor:[10,10] }), zIndexOffset:9999, interactive:false }).addTo(map);
+    selMarker = L.marker([r[F.y], r[F.x]], { icon: L.divIcon({ className:'', html:'<div class="pin pick" style="background:#d4af37"></div>', iconSize:[20,20], iconAnchor:[10,10] }), zIndexOffset:9999, interactive:false }).addTo(map);
     if (fly) {
       const z = Math.max(map.getZoom(), 16);
       const off = innerWidth > 900 ? Math.min(($('#det').offsetWidth || 380) / 2 + 7, map.getSize().x / 4) : 0;
