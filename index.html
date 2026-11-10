@@ -139,7 +139,7 @@ textarea.memo:focus{border-color:var(--gold)}
 .marker-cluster span{line-height:30px}
 .marker-cluster-large{background:rgba(239,107,107,.22)}
 .marker-cluster-large div{background:rgba(240,210,122,.95)}
-.leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.88) contrast(.92) saturate(.6)}
+.leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.88) contrast(.92) saturate(.35)}
 .leaflet-container{font-family:inherit}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#121e30;color:var(--txt);border:1px solid var(--line2)}
 .leaflet-control-zoom a{background:#121e30!important;color:var(--txt)!important;border-color:var(--line2)!important}
@@ -197,7 +197,7 @@ textarea.memo:focus{border-color:var(--gold)}
   .mnav button{border:0;background:none;color:var(--mut);font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
   .mnav button svg{width:20px;height:20px}
   .mnav button.on{color:var(--gold2)}
-  .det{position:fixed;top:auto;left:0;right:0;bottom:0;width:100%;max-width:none;height:82dvh;border-radius:18px 18px 0 0;transform:translateY(105%);z-index:1800}
+  .det{position:fixed;top:auto;left:0;right:0;bottom:0;width:100%;max-width:none;height:70dvh;border-radius:18px 18px 0 0;transform:translateY(105%);z-index:1800}
   .grid4{grid-template-columns:repeat(2,1fr)}
   .br{grid-template-columns:70px 1fr 96px}
   .legend{display:none}
@@ -499,7 +499,13 @@ function select(i, fly){
   if (selMarker) { map.removeLayer(selMarker); selMarker = null; }
   if (r[F.y]) {
     selMarker = L.marker([r[F.y], r[F.x]], { icon: L.divIcon({ className:'', html:'<div class="pin sel" style="background:#d4af37"></div>', iconSize:[20,20], iconAnchor:[10,10] }), zIndexOffset:9999, interactive:false }).addTo(map);
-    if (fly) map.flyTo([r[F.y], r[F.x]], Math.max(map.getZoom(), 16), { duration:.6 });
+    if (fly) {
+      const z = Math.max(map.getZoom(), 16);
+      const off = innerWidth > 900 ? Math.min(($('#det').offsetWidth || 380) / 2 + 7, map.getSize().x / 4) : 0;
+      const offY = innerWidth <= 900 ? -map.getSize().y * 0.33 : 0;
+      const c = map.unproject(map.project([r[F.y], r[F.x]], z).add([off, -offY]), z);
+      map.stop(); map.flyTo(c, z, { duration:.6 });
+    }
   }
   renderDet(i);
 }
@@ -628,8 +634,9 @@ function bind(){
     const s = e.target.closest('[data-star]'); if (s) { const i = +s.dataset.star; setLead(i, { star: !(leads[keyOf(i)]||{}).star }); if (+$('#det').dataset.i === i && $('#det').classList.contains('open')) renderDet(i); return; }
     if (e.target.closest('.more')) return renderMore();
     const c = e.target.closest('.card'); if (!c) return;
-    const i = +c.dataset.i; select(i, true);
-    if (innerWidth <= 900) setView('map');
+    const i = +c.dataset.i;
+    if (innerWidth <= 900) { setView('map'); map.invalidateSize(); }
+    select(i, true);
   });
   $('#det').addEventListener('click', e => {
     const i = +$('#det').dataset.i;
@@ -657,7 +664,7 @@ function fitResult(){
   if (st.sido === '' && !st.sggu) { map.setView([36.35,127.8],7); return; }
   let a=90,b=-90,c=180,d=-180,n=0;
   for (const i of result) { const r = ROWS[i]; if (!r[F.y]) continue; n++; if (r[F.y]<a)a=r[F.y]; if (r[F.y]>b)b=r[F.y]; if (r[F.x]<c)c=r[F.x]; if (r[F.x]>d)d=r[F.x]; }
-  if (n) map.fitBounds([[a,c],[b,d]], { padding:[30,30], maxZoom:15 });
+  if (n) { map.stop(); map.fitBounds([[a,c],[b,d]], { padding:[30,30], maxZoom:15, animate:false }); }
 }
 
 // ---------- boot ----------
