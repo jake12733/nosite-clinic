@@ -274,6 +274,60 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
 .toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);background:var(--navy);color:#fff;font-weight:600;padding:11px 18px;border-radius:10px;z-index:4000;opacity:0;transition:.25s;pointer-events:none;font-size:13px}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* prompts view */
+.pv{display:none;flex:1;min-height:0;grid-template-columns:320px 1fr;gap:16px;padding:16px 20px 20px}
+.main[data-v="prompt"] .pv{display:grid}
+@media (min-width:901px){.app:has(.main[data-v="prompt"]){grid-template-columns:1fr}.app:has(.main[data-v="prompt"]) .side{display:none}}
+.main[data-v="prompt"] .sum,.main[data-v="prompt"] .bar,.main[data-v="prompt"] .tblwrap,.main[data-v="prompt"] .mapv{display:none}
+.pcard{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.pside{display:flex;flex-direction:column;gap:12px;min-height:0}
+.pside .plist{flex:1;overflow:auto;display:grid;gap:6px;align-content:start;padding:2px}
+.pitem{border:1px solid var(--line);background:var(--sf);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;width:100%;transition:.12s}
+.pitem:hover{border-color:var(--line2)}
+.pitem.on{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy) inset}
+[data-theme="dark"] .pitem.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.pitem b{display:block;font-size:13.5px;line-height:1.35}
+.pitem small{display:block;font-size:11.5px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcat{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:5px;margin-right:5px;vertical-align:1px}
+.pcat.kakao{background:var(--kakao);color:var(--kakaoink)}.pcat.call{background:var(--bluebg);color:var(--blue)}.pcat.mail{background:var(--greenbg);color:var(--green)}.pcat.reply{background:var(--goldbg);color:var(--gold-d)}.pcat.ai{background:var(--violetbg);color:var(--violet)}.pcat.etc{background:#eef1f6;color:var(--ink2)}
+[data-theme="dark"] .pcat.etc{background:#1c2940}
+.pmain{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;gap:16px;min-height:0}
+.phosp{grid-column:span 2;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.phosp .lab{font-size:12px;font-weight:700;color:var(--mut)}
+.psearch{position:relative;flex:1;min-width:240px;max-width:420px}
+.pdrop{position:absolute;left:0;right:0;top:44px;background:var(--sf);border:1px solid var(--line2);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.15);z-index:30;max-height:320px;overflow:auto;display:none}
+.pdrop.open{display:block}
+.pdrop button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px}
+.pdrop button:hover{background:var(--sf2)}
+.pdrop button small{color:var(--mut);font-size:11.5px;margin-left:6px}
+.psel{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;flex-wrap:wrap}
+.psel .x2{border:0;background:none;color:var(--dim);cursor:pointer;font-size:14px}
+.pedit,.pprev{display:flex;flex-direction:column;min-height:0;gap:10px}
+.pedit .row{display:grid;grid-template-columns:1fr 130px;gap:8px}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.vars button{font-size:11.5px;padding:4px 8px;border-radius:6px;border:1px dashed var(--line2);background:var(--sf2);cursor:pointer;color:var(--ink2)}
+.vars button:hover{border-color:var(--gold);color:var(--gold-d)}
+textarea.pbody{flex:1;min-height:260px;width:100%;border-radius:10px;border:1px solid var(--line2);background:var(--sf);padding:12px 14px;outline:none;resize:none;line-height:1.65;font-size:13.5px}
+textarea.pbody:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.18)}
+.pacts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pbtn{height:36px;padding:0 13px;border-radius:9px;border:1px solid var(--line2);background:var(--sf);cursor:pointer;font-weight:600;font-size:12.5px;color:var(--ink2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pbtn:hover{border-color:var(--navy);color:var(--ink)}
+.pbtn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.pbtn.k{background:var(--kakao);border-color:var(--kakao);color:var(--kakaoink)}
+.pbtn.del{color:var(--red)}
+[data-theme="dark"] .pbtn.pri{background:var(--gold);border-color:var(--gold);color:#0b131f}
+[data-theme="dark"] .pbtn:hover{border-color:var(--gold)}
+.ptext{flex:1;min-height:260px;overflow:auto;border:1px solid var(--line);background:var(--sf2);border-radius:10px;padding:12px 14px;white-space:pre-wrap;line-height:1.65;font-size:13.5px;word-break:break-word}
+.ptext mark{background:var(--goldbg);color:var(--gold-d);border-radius:4px;padding:0 3px;font-weight:700}
+.psv{font-size:11.5px;color:var(--dim);margin-left:auto}
+.ph{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--mut)}
+.prof{display:grid;gap:7px}
+.prof input{height:36px;font-size:12.5px}
+.dprompt{border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:18px}
+.dprompt .dd{height:36px;font-size:12.5px;margin-bottom:8px}
+.dprompt .ptext{min-height:0;max-height:200px;font-size:12.5px;padding:10px 12px}
+.dprompt .pacts{margin-top:8px}
+
 /* mobile */
 .mnav{display:none}
 .mcards{display:none}
@@ -305,7 +359,12 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
   .mc .r2{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .main[data-v="map"] .sum{display:none}
   .mapv{margin:0;border:0;border-radius:0}
-  .mnav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;height:58px;background:var(--sf);border-top:1px solid var(--line);z-index:1500;padding-bottom:env(safe-area-inset-bottom)}
+  .pv{grid-template-columns:1fr;padding:12px;overflow:auto;gap:12px}
+  .pmain{grid-template-columns:1fr}
+  .phosp{grid-column:auto}
+  .pside .plist{max-height:260px}
+  .main[data-v="prompt"] .pv{display:grid;align-content:start}
+  .mnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;height:58px;background:var(--sf);border-top:1px solid var(--line);z-index:1500;padding-bottom:env(safe-area-inset-bottom)}
   .mnav button{border:0;background:none;color:var(--mut);font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-weight:600}
   .mnav button svg{width:20px;height:20px}
   .mnav button.on{color:var(--navy)}
@@ -340,6 +399,7 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
   <div class="tabs" id="tabs">
     <button data-v="list" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>표로 보기</button>
     <button data-v="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>카카오맵</button>
+    <button data-v="prompt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg>응대 프롬프트</button>
   </div>
   <div class="tr">
     <button class="hbtn thm" id="btnTheme" title="화이트/블랙 모드 전환" aria-label="화이트/블랙 모드 전환"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
@@ -423,6 +483,39 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
       <div class="mlegend"><span><i class="dot" style="background:#e5484d"></i>홈페이지 없음</span><span><i class="dot" style="background:#7c5cff"></i>블로그·SNS만</span><span><i class="dot" style="background:#f5c400"></i>카톡채널 있음</span><span><i class="dot" style="background:#94a3b8"></i>홈페이지 있음</span></div>
       <div class="mhint" id="mhint">지도를 확대하면 병원이 하나씩 보여요</div>
     </div>
+    <div class="pv" id="pv">
+      <div class="pside">
+        <div class="pcard prof">
+          <div class="ph">내 정보 <span style="font-weight:500;color:var(--dim)">문구에 자동으로 들어가요</span></div>
+          <input class="inp" id="pfName" placeholder="내 이름/상호 (예: Owen Web)">
+          <input class="inp" id="pfContact" placeholder="내 연락처 (전화·카톡 ID·이메일)">
+          <input class="inp" id="pfPort" placeholder="포트폴리오 링크">
+        </div>
+        <div class="chips" id="pcats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><button class="pbtn pri" id="pNew" style="justify-content:center">+ 새 프롬프트</button><button class="pbtn" id="pPaste" style="justify-content:center">클립보드에서 붙여넣기</button></div>
+        <div class="plist" id="plist"></div>
+        <button class="pbtn" id="pReset" style="justify-content:center;font-size:11.5px;height:32px">기본 프롬프트 다시 추가</button>
+      </div>
+      <div class="pmain">
+        <div class="pcard phosp">
+          <span class="lab">어느 병원에 보낼까요?</span>
+          <div class="psearch"><input class="inp" id="phq" placeholder="병원 이름으로 검색 (표에서 고른 병원이 자동 선택돼요)" autocomplete="off"><div class="pdrop" id="pdrop"></div></div>
+          <div class="psel" id="psel"></div>
+        </div>
+        <div class="pcard pedit">
+          <div class="ph">프롬프트 편집 <span class="psv" id="psv"></span></div>
+          <div class="row"><input class="inp" id="ptitle" placeholder="제목"><select class="dd" id="pcat"></select></div>
+          <div class="vars" id="pvars"></div>
+          <textarea class="pbody" id="pbody" placeholder="여기에 프롬프트나 메시지를 붙여넣으세요.&#10;{병원명} 같은 변수를 넣으면 선택한 병원 정보로 자동으로 바뀌어요."></textarea>
+          <div class="pacts"><button class="pbtn" id="pDup">복제</button><button class="pbtn del" id="pDel">삭제</button><span class="psv">입력하면 자동 저장돼요</span></div>
+        </div>
+        <div class="pcard pprev">
+          <div class="ph">미리보기 <span style="font-weight:500;color:var(--dim)">병원 정보가 채워진 최종 문구</span></div>
+          <div class="ptext" id="ptext"></div>
+          <div class="pacts" id="pacts"></div>
+        </div>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -432,6 +525,7 @@ textarea.memo:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,5
   <button data-m="filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>필터</button>
   <button data-m="list" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>목록</button>
   <button data-m="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>지도</button>
+  <button data-m="prompt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>프롬프트</button>
 </nav>
 
 <div class="modal" id="mStats"><div class="mbox" id="statsBox"></div></div>
@@ -641,6 +735,7 @@ function openDet(i){
         <button data-showmap>지도에서 보기</button>
         <button data-copyall>정보 전체 복사</button>
       </div>
+      ${drawerPromptHTML(i)}
       <dl class="kv">
         <dt>주소</dt><dd>${esc(r[F.addr])}</dd>
         <dt>개설일</dt><dd>${openStr(r[F.open])} (${ageLabel(r[F.open])})</dd>
@@ -655,6 +750,7 @@ function openDet(i){
       <div class="sv" id="sv">${L0.u?'마지막 수정 '+new Date(L0.u).toLocaleString('ko-KR'):''}</div>
     </div>`;
   $('#det').dataset.i = i; $('#det').classList.add('open');
+  pHosp = i; renderPSel(); renderPrev();
   if (mapReady && $('#main').dataset.v==='map') focusMap(i, false);
 }
 function closeDet(){ $('#det').classList.remove('open'); selIdx = -1; $$('#tbody tr.act').forEach(e=>e.classList.remove('act')); if (selOv) { selOv.setMap(null); selOv = null; } }
@@ -725,8 +821,10 @@ function fitMap(){
   for (const i of result) { const r = ROWS[i]; if (r[F.y]) { b.extend(new kakao.maps.LatLng(r[F.y], r[F.x])); n++; } }
   if (n) kmap.setBounds(b, 40, 40, 40, 40);
 }
+function closeDetKeep(){ $('#det').classList.remove('open'); }
 function setView(v){
-  $('#main').dataset.v = v; $$('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  $('#main').dataset.v = v;
+  if (v === 'prompt') { $('#det').classList.remove('open'); renderPList(); renderPrev(); } $$('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
   if (v==='map') { if (!mapReady) loadKakao(); else { kmap.relayout(); drawMap(); } }
 }
 
@@ -757,6 +855,218 @@ function stats(){
     <div class="h4">지역별 홈페이지 없는 곳 (노란색 = 카톡채널 있음)</div>
     <div class="bars">${sr.map(([s,[c,k]])=>`<div class="brr"><span>${s==='세종시'?'세종':s}</span><div class="trk"><i style="width:${k/mx*100}%;background:#f5c400"></i><i style="width:${(c-k)/mx*100}%;background:var(--trk2)"></i></div><span class="num"><b>${fmt(c)}</b> · 카톡 ${fmt(k)}</span></div>`).join('')}</div>`;
   $('#mStats').classList.add('open');
+}
+
+// ---------- prompts ----------
+const PS = 'nosite-prompts-v1', PF = 'nosite-profile-v1';
+const CATS = { kakao:'카톡', call:'전화', mail:'이메일', reply:'고객 응대', ai:'AI 프롬프트', etc:'기타' };
+const VARS = ['병원명','종별','지역','주소','전화','카톡채널','진료과목','개원일','개원기간','홈페이지상태','의사수','내이름','내연락처','포트폴리오'];
+const PKG = '스탠다드 30만 원(1~2페이지) / 디럭스 50만 원(5페이지 이하, 추천) / 프리미엄 70만 원(최대 7페이지, 고급 모션). 결제는 계좌이체, 3.3% 원천징수 기준.';
+const HOSP_BLOCK = `[병원 정보]
+- 병원명: {병원명} ({종별})
+- 위치: {주소}
+- 진료과목: {진료과목}
+- 개원: {개원일} ({개원기간})
+- 의사 수: {의사수}
+- 현재 홈페이지: {홈페이지상태}
+- 카톡채널: {카톡채널}`;
+const DEFAULT_PROMPTS = [
+{id:'d1',cat:'kakao',title:'첨 연락 · 홈페이지 없는 병원',body:`안녕하세요, {병원명} 원장님. 병원 홈페이지를 제작하는 {내이름}입니다.
+{지역} {진료과목} 병원을 찾아보다가, {병원명}은 아직 공식 홈페이지가 없는 것 같아 조심스럽게 연락드렸어요.
+
+요즘 환자분들은 방문 전에 네이버·구글에서 병원 이름을 검색해서 진료과목, 의료진, 오시는 길을 먼저 확인하세요. 홈페이지가 있으면 신뢰도와 문의가 확실히 달라집니다.
+
+제가 만든 병원 사이트 샘플 먼저 한번 봐주세요.
+{포트폴리오}
+
+관심 있으시면 {병원명}에 맞춘 구성안을 무료로 정리해서 보내드릴게요. 편하게 답장 주세요. 감사합니다!`},
+{id:'d2',cat:'kakao',title:'첨 연락 · 신규 개원 축하',body:`안녕하세요, {병원명} 원장님! 최근({개원일}) 개원하신 걸 보고 축하 인사 겸 연락드렸습니다. 병원 홈페이지를 전문으로 만드는 {내이름}입니다.
+
+개원 초기에는 '검색했을 때 제대로 보이는 병원'인지가 첫 환자 유입에 큰 영향을 줍니다. 진료 안내, 의료진 소개, 오시는 길, 예약 문의까지 한 번에 담은 사이트를 빠르게 준비해 드릴 수 있어요.
+
+샘플: {포트폴리오}
+
+개원 이벤트나 진료시간 안내도 바로 넣어드릴 수 있으니 필요하시면 편하게 말씀 주세요.`},
+{id:'d3',cat:'kakao',title:'첨 연락 · 블로그만 운영하는 병원',body:`안녕하세요, {병원명} 원장님. 블로그 꾸준히 운영하시는 거 잘 봤습니다! 병원 홈페이지 제작하는 {내이름}입니다.
+
+블로그는 소식 전하기에 좋지만, 처음 병원을 찾는 분들은 '공식 홈페이지'에서 진료과목·의료진·위치를 한눈에 보고 싶어 하세요. 블로그 글은 그대로 살리고, 홈페이지에서 블로그로 자연스럽게 연결되게 만들어 드릴 수 있어요.
+
+샘플: {포트폴리오}
+
+가볍게 상담 원하시면 편하게 답장 주세요.`},
+{id:'d4',cat:'call',title:'첫 통화 스크립트',body:`[인사] 안녕하세요, {병원명}이죠? 저는 병원 홈페이지를 만드는 {내이름}이라고 합니다. 원장님이나 실장님께 1분만 안내드려도 될까요?
+
+[용건] {병원명}을 검색해보니 공식 홈페이지가 따로 없어서 연락드렸어요. 홈페이지가 있으면 검색했을 때 신뢰도가 올라가고 예약·문의도 늘어나서 요즘 많이들 만드세요.
+
+[제안] 제가 만든 병원 사이트 샘플이랑 {병원명} 맞춤 구성안을 카톡이나 문자로 보내드려도 될까요?
+
+[담당자 부재] 그럼 실장님께 전달 부탁드려도 될까요? 자료 받으실 번호나 카톡채널로 샘플만 보내드릴게요.
+
+[거절] 네, 알겠습니다. 나중에라도 필요하시면 {내연락처}로 연락 주세요. 좋은 하루 보내세요!`},
+{id:'d5',cat:'mail',title:'제안 이메일',body:`제목: [{병원명}] 병원 홈페이지 제작 제안드립니다
+
+안녕하세요, {병원명} 원장님.
+병원·프리미엄 시설 홈페이지를 전문으로 제작하는 {내이름}입니다.
+{지역}에 있는 {병원명}을 검색하던 중 공식 홈페이지가 없는 것을 보고 연락드렸습니다.
+
+■ 이렇게 만들어 드립니다
+- 진료과목({진료과목})·의료진·진료시간·오시는 길을 한눈에
+- PC·모바일 모두 깔끔하게 보이는 반응형
+- 카카오톡 상담·전화·예약 버튼 연결
+
+■ 패키지
+- 스탠다드 30만 원 (1~2페이지)
+- 디럭스 50만 원 (5페이지 이하, 가장 많이 선택)
+- 프리미엄 70만 원 (최대 7페이지, 고급 모션)
+
+샘플 보기: {포트폴리오}
+
+회신 주시면 {병원명}에 맞춘 구성안을 무료로 보내드리겠습니다.
+
+{내이름} 드림
+{내연락처}`},
+{id:'d6',cat:'kakao',title:'후속 연락 (답장 없을 때)',body:`안녕하세요 원장님, 지난번 홈페이지 건으로 연락드렸던 {내이름}입니다. 혹시 보내드린 샘플 보셨을까요?
+
+바쁘실 것 같아서 {병원명}용 메인 화면 구성을 간단히 정리해봤어요. 부담 없이 한번 보시고 의견만 주셔도 됩니다.
+필요 없으시면 말씀만 주세요. 더 연락드리지 않을게요!`},
+{id:'d7',cat:'reply',title:'가격 문의 답변',body:`문의 주셔서 감사합니다! 패키지는 이렇게 준비돼 있어요.
+
+① 스탠다드 30만 원: 1~2페이지 (병원 소개 + 진료안내·오시는 길)
+② 디럭스 50만 원: 5페이지 이하 (소개, 의료진, 진료과목, 진료시간·오시는 길, 문의) ← 병원에서 가장 많이 선택하세요
+③ 프리미엄 70만 원: 최대 7페이지 + 고급 모션 효과
+
+결제는 계좌이체로 진행되고, 3.3% 원천징수 기준으로 안내드려요.
+{병원명}은 {진료과목} 위주라 디럭스 구성을 추천드려요. 원하시면 페이지 구성안 먼저 보내드릴게요.`},
+{id:'d8',cat:'reply',title:'보류·거절할 때 대응',body:`[생각해볼게요]
+네, 충분히 고민해보세요! 비교하실 때 참고하시라고 {병원명} 맞춤 구성안만 정리해서 보내드려도 될까요? 결정은 천천히 하셔도 됩니다.
+
+[비싸요]
+부담되실 수 있죠. 처음엔 스탠다드(30만 원, 1~2페이지)로 꼭 필요한 정보만 담아서 시작하시고, 나중에 페이지를 늘리는 방법도 있어요.
+
+[블로그로 충분해요]
+블로그는 계속 운영하시면 좋아요. 홈페이지는 '공식 안내판' 역할이라 검색했을 때 신뢰도를 올려주고, 블로그로도 연결해 드려서 같이 쓰시면 효과가 더 좋습니다.
+
+[신경 쓸 시간이 없어요]
+원장님은 자료(로고, 사진, 진료시간)만 주시면 나머지는 제가 다 정리해서 시안으로 보여드려요. 확인만 해주시면 됩니다.`},
+{id:'d9',cat:'reply',title:'진행 절차 안내',body:`진행 순서 안내드릴게요.
+
+1) 상담: 원하시는 느낌, 필요한 페이지 확인
+2) 자료 전달: 로고, 병원 사진, 의료진 소개, 진료시간, 진료과목 설명
+3) 시안 제작: 메인 화면 시안을 먼저 보여드려요
+4) 수정: 피드백 반영
+5) 오픈: 사이트 공개 후 네이버·구글 검색 등록 안내
+
+결제는 계좌이체(3.3% 원천징수 기준)로 진행됩니다. 궁금하신 점 편하게 물어보세요!`},
+{id:'d10',cat:'ai',title:'AI · 고객 답장에 맞는 답변 만들기',body:`너는 병원 홈페이지 제작 프리랜서 '{내이름}'의 영업 담당자야.
+아래 병원 정보와 고객 메시지를 보고, 친절하고 짧은 답장을 카톡 말투로 3가지 버전 써줘.
+과장하거나 의료광고법에 걸릴 표현(최고, 유일, 완치 보장 등)은 쓰지 마.
+
+${HOSP_BLOCK}
+
+[내 패키지]
+${PKG}
+샘플: {포트폴리오}
+
+[고객 메시지]
+(여기에 고객이 보낸 메시지를 붙여넣기)
+
+[원하는 방향]
+(예: 상담 일정 잡기 / 가격 설명 / 보류 고객 설득)`},
+{id:'d11',cat:'ai',title:'AI · 병원 맞춤 제안서 초안',body:`너는 병원 마케팅과 웹 기획 전문가야. 아래 병원을 위한 홈페이지 제작 제안서를 한국어로 써줘.
+구성: 1) 현재 상황 진단 2) 홈페이지가 필요한 이유 3가지 3) 추천 페이지 구성 4) 추천 패키지와 이유 5) 진행 절차
+A4 1장 분량, 원장님이 읽기 쉽게. 의료광고법에 걸릴 표현은 빼줘.
+
+${HOSP_BLOCK}
+
+[제작자]
+{내이름} / {내연락처}
+샘플: {포트폴리오}
+
+[패키지]
+${PKG}`},
+{id:'d12',cat:'ai',title:'AI · 홈페이지 구성안과 메인 문구',body:`아래 병원의 홈페이지 메인 화면 문구와 페이지 구성을 만들어줘.
+- 히어로 문구 3안 + 서브 문구
+- 섹션 순서(진료과목, 의료진, 진료시간, 오시는 길, 문의)와 각 섹션의 짧은 소개 문구
+- 어울리는 컴러 톤 2가지 제안
+의료광고법 위반 소지가 있는 표현(최고, 유일, 완치 보장 등)은 빼줘.
+
+${HOSP_BLOCK}`}
+];
+let prompts = [], profile = {}, curP = null, pHosp = -1, pCatF = 'all';
+try { prompts = JSON.parse(localStorage.getItem(PS) || 'null'); } catch { prompts = null; }
+if (!Array.isArray(prompts)) prompts = DEFAULT_PROMPTS.map(p => ({...p}));
+try { profile = JSON.parse(localStorage.getItem(PF) || 'null') || {}; } catch { profile = {}; }
+if (!profile.name && !profile.port && !profile.contact) profile = { name:'Owen Web', contact:'', port:'https://jake12733.github.io/web-buy/' };
+const saveP = () => localStorage.setItem(PS, JSON.stringify(prompts));
+const saveProf = () => localStorage.setItem(PF, JSON.stringify(profile));
+const agoText = v => { const m = monthsSince(v); if (m >= 9999) return '개원일 미등록'; if (m <= 0) return '이번 달 개원'; if (m < 12) return m + '개월 전 개원'; return Math.floor(m/12) + '년 전 개원'; };
+function varMap(i){
+  const m = { '내이름': profile.name || '', '내연락처': profile.contact || '', '포트폴리오': profile.port || '' };
+  if (i < 0 || !ROWS[i]) return m;
+  const r = ROWS[i]; let d = deptList(r[F.dSpec]); if (!d.length) d = deptList(r[F.dAll]);
+  const dept = d.length ? d.slice(0,3).join('·') + (d.length > 3 ? ' 등' : '') : typeName(i);
+  return Object.assign(m, { '병원명': r[F.name], '종별': typeName(i), '지역': sidoName(i) + ' ' + r[F.sggu], '주소': r[F.addr], '전화': r[F.tel] || '미등록', '카톡채널': r[F.tc] ? kakaoUrl(r[F.tc]) : '없음', '진료과목': dept, '개원일': openStr(r[F.open]), '개원기간': agoText(r[F.open]), '홈페이지상태': ['없음','블로그·SNS만 운영','있음 ' + r[F.site]][r[F.st]], '의사수': r[F.docs] ? r[F.docs] + '명' : '미등록' });
+}
+function fillText(body, i){ const m = varMap(i); return body.replace(/\{([^{}\n]{1,12})\}/g, (s, k) => (m[k] !== undefined && m[k] !== '') ? m[k] : s); }
+function fillHTML(body, i){ const m = varMap(i); return esc(body).replace(/\{([^{}\n]{1,12})\}/g, (s, k) => (m[k] !== undefined && m[k] !== '') ? esc(m[k]) : (VARS.includes(k) ? `<mark>${s}</mark>` : s)); }
+function renderPList(){
+  const cnt = {all: prompts.length}; prompts.forEach(p => cnt[p.cat] = (cnt[p.cat]||0)+1);
+  $('#pcats').innerHTML = [['all','전체'], ...Object.entries(CATS)].filter(([k]) => k==='all' || cnt[k]).map(([k,t]) => `<span class="chip${pCatF===k?' on':''}" data-pc="${k}">${t} <i>${cnt[k]||0}</i></span>`).join('');
+  const list = prompts.filter(p => pCatF==='all' || p.cat===pCatF);
+  $('#plist').innerHTML = list.length ? list.map(p => `<button class="pitem${curP===p.id?' on':''}" data-pid="${p.id}"><b><span class="pcat ${p.cat}">${CATS[p.cat]||'기타'}</span>${esc(p.title||'제목 없음')}</b><small>${esc((p.body||'').replace(/\s+/g,' ').slice(0,60))}</small></button>`).join('') : '<div style="color:var(--mut);font-size:12.5px;padding:10px">프롬프트가 없어요</div>';
+}
+function openP(id){
+  const p = prompts.find(x => x.id===id) || prompts[0]; if (!p) { curP = null; $('#ptitle').value=''; $('#pbody').value=''; renderPrev(); renderPList(); return; }
+  curP = p.id; $('#ptitle').value = p.title || ''; $('#pcat').value = p.cat || 'etc'; $('#pbody').value = p.body || '';
+  renderPList(); renderPrev(); $('#psv').textContent = '';
+}
+function renderPSel(){
+  if (pHosp < 0) { $('#psel').innerHTML = '<span style="color:var(--dim);font-weight:500">선택된 병원 없음 (변수가 그대로 남아요)</span>'; return; }
+  const r = ROWS[pHosp];
+  $('#psel').innerHTML = `<span>${esc(r[F.name])}</span><span class="bd">${typeName(pHosp)}</span><span style="color:var(--mut);font-weight:500">${esc(sidoName(pHosp))} ${esc(r[F.sggu])}</span>${r[F.tc]?'<span class="tag kk" style="padding:2px 7px"><svg><use href="#i-chat"/></svg>카톡</span>':''}<button class="x2" data-unsel title="선택 해제">✕</button>`;
+}
+function renderPrev(){
+  const p = prompts.find(x => x.id===curP);
+  $('#ptext').innerHTML = p ? fillHTML(p.body||'', pHosp) : '';
+  const r = pHosp >= 0 ? ROWS[pHosp] : null;
+  $('#pacts').innerHTML = `<button class="pbtn pri" data-pcopy>복사하기</button>${p && p.cat==='ai' ? '<a class="pbtn" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT 열기</a><a class="pbtn" href="https://claude.ai/new" target="_blank" rel="noopener">Claude 열기</a>' : ''}${r && r[F.tc] ? `<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener"><svg width="14" height="14"><use href="#i-chat"/></svg>카톡채널 열기</a>` : ''}${r && r[F.tel] ? `<a class="pbtn" href="tel:${esc(r[F.tel])}">전화 걸기</a>` : ''}${r && r[F.email] ? `<a class="pbtn" href="mailto:${esc(r[F.email])}">메일 쓰기</a>` : ''}`;
+  const miss = p ? [...new Set([...(p.body||'').matchAll(/\{([^{}\n]{1,12})\}/g)].map(x=>x[1]).filter(k => VARS.includes(k) && !varMap(pHosp)[k]))] : [];
+  if (miss.length) $('#pacts').insertAdjacentHTML('beforeend', `<span class="psv">빈 항목: ${miss.map(esc).join(', ')}</span>`);
+}
+function pickHosp(i){ pHosp = i; renderPSel(); renderPrev(); $('#phq').value = ''; $('#pdrop').classList.remove('open'); }
+function buildPromptUI(){
+  $('#pcat').innerHTML = Object.entries(CATS).map(([k,t]) => `<option value="${k}">${t}</option>`).join('');
+  $('#pvars').innerHTML = VARS.map(v => `<button data-var="${v}">{${v}}</button>`).join('');
+  $('#pfName').value = profile.name || ''; $('#pfContact').value = profile.contact || ''; $('#pfPort').value = profile.port || '';
+  renderPSel(); openP(prompts[0] && prompts[0].id);
+}
+function newPrompt(body, title){ const p = { id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2,6), cat: pCatF!=='all' ? pCatF : 'etc', title: title || '새 프롬프트', body: body || '' }; prompts.unshift(p); saveP(); openP(p.id); $('#pbody').focus(); return p; }
+function drawerPromptHTML(i){
+  const opts = prompts.filter(p => p.cat !== 'ai').concat(prompts.filter(p => p.cat === 'ai'));
+  if (!opts.length) return '';
+  const r = ROWS[i];
+  const def = opts.find(p => r[F.st]===1 ? p.id==='d3' : (monthsSince(r[F.open])<=12 ? p.id==='d2' : p.id==='d1')) || opts[0];
+  return `<div class="h4">응대 문구</div><div class="dprompt"><select class="dd" id="dpSel">${opts.map(p => `<option value="${p.id}" ${p.id===def.id?'selected':''}>[${CATS[p.cat]||'기타'}] ${esc(p.title)}</option>`).join('')}</select><div class="ptext" id="dpText">${fillHTML(def.body||'', i)}</div><div class="pacts"><button class="pbtn pri" data-dpcopy>문구 복사</button>${r[F.tc]?`<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener">복사 후 카톡 열기</a>`:''}<button class="pbtn" data-dpedit>프롬프트에서 편집</button></div></div>`;
+}
+function bindPrompts(){
+  let pT;
+  const persist = () => { const p = prompts.find(x => x.id===curP); if (!p) return; p.title = $('#ptitle').value; p.cat = $('#pcat').value; p.body = $('#pbody').value; clearTimeout(pT); pT = setTimeout(() => { saveP(); renderPList(); $('#psv').textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR'); }, 350); renderPrev(); };
+  $('#ptitle').addEventListener('input', persist); $('#pbody').addEventListener('input', persist); $('#pcat').addEventListener('change', persist);
+  $('#plist').addEventListener('click', e => { const b = e.target.closest('[data-pid]'); if (b) openP(b.dataset.pid); });
+  $('#pcats').addEventListener('click', e => { const c = e.target.closest('[data-pc]'); if (!c) return; pCatF = c.dataset.pc; renderPList(); });
+  $('#pvars').addEventListener('click', e => { const b = e.target.closest('[data-var]'); if (!b) return; const ta = $('#pbody'), t = '{' + b.dataset.var + '}', s = ta.selectionStart ?? ta.value.length, en = ta.selectionEnd ?? s; ta.value = ta.value.slice(0,s) + t + ta.value.slice(en); ta.focus(); ta.selectionStart = ta.selectionEnd = s + t.length; persist(); });
+  $('#pNew').addEventListener('click', () => newPrompt());
+  $('#pPaste').addEventListener('click', async () => { try { const t = await navigator.clipboard.readText(); if (!t.trim()) return toast('클립보드가 비어 있어요'); newPrompt(t, t.trim().split('\n')[0].slice(0,30)); toast('붙여넣은 프롬프트를 저장했어요'); } catch { newPrompt(); toast('여기에 Ctrl+V로 붙여넣어 주세요'); } });
+  $('#pDup').addEventListener('click', () => { const p = prompts.find(x => x.id===curP); if (!p) return; const n = { ...p, id: 'u' + Date.now().toString(36), title: p.title + ' (복사본)' }; prompts.splice(prompts.indexOf(p)+1, 0, n); saveP(); openP(n.id); toast('복제했어요'); });
+  $('#pDel').addEventListener('click', () => { const p = prompts.find(x => x.id===curP); if (!p) return; if (!confirm(`'${p.title}' 프롬프트를 삭제할까요?`)) return; const k = prompts.indexOf(p); prompts.splice(k,1); saveP(); openP((prompts[k] || prompts[k-1] || {}).id); toast('삭제했어요'); });
+  $('#pReset').addEventListener('click', () => { let n = 0; DEFAULT_PROMPTS.forEach(d => { if (!prompts.find(p => p.id===d.id)) { prompts.push({...d}); n++; } }); saveP(); renderPList(); toast(n ? `기본 프롬프트 ${n}개를 다시 추가했어요` : '기본 프롬프트가 모두 있어요'); });
+  ['pfName','pfContact','pfPort'].forEach(id => $('#'+id).addEventListener('input', () => { profile = { name: $('#pfName').value, contact: $('#pfContact').value, port: $('#pfPort').value }; saveProf(); renderPrev(); }));
+  $('#pacts').addEventListener('click', e => { if (!e.target.closest('[data-pcopy]')) return; const p = prompts.find(x => x.id===curP); if (p) copy(fillText(p.body||'', pHosp), '복사했어요. 카톡·메일·AI에 붙여넣으세요'); });
+  $('#psel').addEventListener('click', e => { if (e.target.closest('[data-unsel]')) pickHosp(-1); });
+  let hT;
+  $('#phq').addEventListener('input', e => { clearTimeout(hT); hT = setTimeout(() => { const q = e.target.value.trim().toLowerCase(); if (q.length < 1) { $('#pdrop').classList.remove('open'); return; } const out = []; const pool = result.length ? result : []; for (const i of pool) { if (ROWS[i][F.name].toLowerCase().includes(q)) { out.push(i); if (out.length >= 30) break; } } if (out.length < 30) for (let i=0;i<N && out.length<30;i++) if (!out.includes(i) && ROWS[i][F.name].toLowerCase().includes(q)) out.push(i); $('#pdrop').innerHTML = out.length ? out.map(i => `<button data-ph="${i}">${esc(ROWS[i][F.name])}<small>${esc(sidoName(i))} ${esc(ROWS[i][F.sggu])} · ${typeName(i)}${ROWS[i][F.tc]?' · 카톡':''}</small></button>`).join('') : '<div style="padding:12px;color:var(--mut);font-size:12.5px">검색 결과가 없어요</div>'; $('#pdrop').classList.add('open'); }, 150); });
+  $('#pdrop').addEventListener('click', e => { const b = e.target.closest('[data-ph]'); if (b) pickHosp(+b.dataset.ph); });
+  document.addEventListener('click', e => { if (!e.target.closest('.psearch')) $('#pdrop').classList.remove('open'); });
 }
 
 // ---------- events ----------
@@ -796,23 +1106,27 @@ function bind(){
     const cp = e.target.closest('[data-cp]'); if (cp) return copy(cp.dataset.cp, '이메일 복사했어요');
     const s = e.target.closest('[data-st]'); if (s) { const v = s.dataset.st; setLead(i, {s: (leads[keyOf(i)]||{}).s===v ? '' : v}); openDet(i); return; }
     if (e.target.closest('[data-showmap]')) { if (innerWidth<=900) { setMobile('map'); } else setView('map'); setTimeout(()=>{ if (mapReady) { kmap.relayout(); focusMap(i, true); drawMap(); } else { const w = setInterval(()=>{ if (mapReady){ clearInterval(w); focusMap(i,true); drawMap(); } }, 200); } }, 60); return; }
+    if (e.target.id === 'dpSel') return;
+    if (e.target.closest('[data-dpcopy]') || e.target.closest('.dprompt .pbtn.k')) { const p = prompts.find(x => x.id===$('#dpSel').value); if (p) copy(fillText(p.body||'', i), '문구 복사했어요'); return; }
+    if (e.target.closest('[data-dpedit]')) { const id = $('#dpSel').value; pHosp = i; if (innerWidth<=900) setMobile('prompt'); else setView('prompt'); renderPSel(); openP(id); closeDetKeep(); return; }
     if (e.target.closest('[data-copyall]')) { const r = ROWS[i]; copy([`${r[F.name]} (${typeName(i)})`, r[F.addr], '전화: '+(r[F.tel]||'-'), '홈페이지: '+(['없음','블로그·SNS만','있음 '+r[F.site]][r[F.st]]), r[F.tc]?'카톡채널: '+kakaoUrl(r[F.tc]):'', r[F.email]?'이메일(추정): '+r[F.email]:'', ...(r[F.sns]||[])].filter(Boolean).join('\n')); }
   });
+  $('#det').addEventListener('change', e => { if (e.target.id !== 'dpSel') return; const i = +$('#det').dataset.i; const p = prompts.find(x => x.id===e.target.value); $('#dpText').innerHTML = p ? fillHTML(p.body||'', i) : ''; });
   $('#det').addEventListener('input', e => { if (e.target.id!=='memo') return; const i = +$('#det').dataset.i; clearTimeout(e.target._t); e.target._t = setTimeout(()=>{ setLead(i, {m:e.target.value}); $('#sv').textContent = '저장됨 · '+new Date().toLocaleTimeString('ko-KR'); }, 400); });
   $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); });
   $('#btnCsv').addEventListener('click', csv); $('#btnStats').addEventListener('click', stats);
   $('#btnTheme').addEventListener('click', () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('nosite-theme', t); } catch {} toast(t === 'dark' ? '블랙 모드' : '화이트 모드'); });
   $('#mStats').addEventListener('click', e => { if (e.target===e.currentTarget || e.target.closest('[data-mclose]')) $('#mStats').classList.remove('open'); });
-  $('#bkOut').addEventListener('click', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(leads)], {type:'application/json'})); a.download = `nosite-영업기록-${ymd(new Date())}.json`; a.click(); toast(`영업 기록 ${Object.keys(leads).length}건 백업했어요`); });
+  $('#bkOut').addEventListener('click', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({v:2, leads, prompts, profile})], {type:'application/json'})); a.download = `nosite-영업기록-${ymd(new Date())}.json`; a.click(); toast(`영업 기록 ${Object.keys(leads).length}건 백업했어요`); });
   $('#bkIn').addEventListener('click', () => $('#bkFile').click());
-  $('#bkFile').addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return; try { const d = JSON.parse(await f.text()); let n=0; for (const [k,v] of Object.entries(d)) { if (!leads[k] || (v.u||0) > (leads[k].u||0)) { leads[k] = v; n++; } } saveLeads(); apply(true); toast(`${n}건 불러왔어요`); } catch { toast('백업 파일을 읽지 못했어요'); } e.target.value=''; });
+  $('#bkFile').addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return; try { let d = JSON.parse(await f.text()); if (d && d.v === 2) { if (Array.isArray(d.prompts)) { d.prompts.forEach(p => { const k = prompts.findIndex(x => x.id===p.id); if (k >= 0) prompts[k] = p; else prompts.push(p); }); saveP(); renderPList(); } if (d.profile) { profile = d.profile; saveProf(); $('#pfName').value = profile.name||''; $('#pfContact').value = profile.contact||''; $('#pfPort').value = profile.port||''; } d = d.leads || {}; } let n=0; for (const [k,v] of Object.entries(d)) { if (!leads[k] || (v.u||0) > (leads[k].u||0)) { leads[k] = v; n++; } } saveLeads(); apply(true); toast(`${n}건 불러왔어요`); } catch { toast('백업 파일을 읽지 못했어요'); } e.target.value=''; });
   $('#mnav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMobile(b.dataset.m); });
   document.addEventListener('keydown', e => { if (e.key==='Escape') { $('#mStats').classList.remove('open'); closeDet(); } });
 }
 function setMobile(m){
   $$('#mnav button').forEach(b=>b.classList.toggle('on', b.dataset.m===m));
   $('#app').dataset.m = m;
-  if (m==='map') setView('map'); else if (m==='list') setView('list');
+  if (m==='map') setView('map'); else if (m==='list') setView('list'); else if (m==='prompt') setView('prompt');
 }
 function resetAll(){
   Object.assign(st, {q:'',sido:'',sggu:'',dept:'',spec:false,hp:'nosite',ct:'all',opened:0,lead:'all',hideDrop:true,sort:'new'}); st.types.clear();
@@ -822,7 +1136,7 @@ function resetAll(){
 }
 
 (async () => {
-  try { await load(); buildUI(); bind(); apply(); setTimeout(()=>$('#loader').classList.add('hide'), 120); }
+  try { await load(); buildUI(); bind(); buildPromptUI(); bindPrompts(); apply(); setTimeout(()=>$('#loader').classList.add('hide'), 120); }
   catch (err) { $('#lmsg').textContent = '데이터를 불러오지 못했어요. 새로고침 해주세요.'; console.error(err); }
 })();
 })();
