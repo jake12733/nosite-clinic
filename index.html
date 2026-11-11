@@ -393,6 +393,10 @@ textarea.pbody:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,
 .smsset[open] summary{margin-bottom:12px}
 .smsnote{font-size:12.5px;color:var(--mut);line-height:1.6}
 #smsBytes{font-weight:500;margin-left:6px}
+
+.bd.snt{font-weight:700}
+tr.sent td:first-child{box-shadow:inset 3px 0 0 #18a957}
+.mc.sent{box-shadow:inset 3px 0 0 #18a957}
 </style>
 </head>
 <body>
@@ -462,7 +466,7 @@ textarea.pbody:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,
     </div>
     <div class="fg">
       <div class="fl">영업 상태</div>
-      <select class="dd" id="lead"><option value="all">전체</option><option value="none">아직 안 건드린 곳</option><option value="any">내 리드만</option></select>
+      <select class="dd" id="lead"><option value="all">전체</option><option value="none">아직 안 건드린 곳</option><option value="any">내 리드만</option><option value="sent">보낸 곳</option><option value="unsent">아직 안 보낸 곳</option></select>
       <label class="tog" style="margin-top:8px"><input type="checkbox" id="hideDrop" checked><span class="sw"></span>제외 처리한 곳 숨기기</label>
     </div>
     <div class="fg"><button class="sbtn" id="reset">필터 초기화</button></div>
@@ -664,6 +668,8 @@ function apply(keep){
     if (st.hideDrop && L && L.s==='drop') continue;
     if (st.lead==='none' && L && (L.s||L.star)) continue;
     if (st.lead==='any' && !(L && (L.s||L.star||L.m))) continue;
+    if (st.lead==='sent' && !(L && L.sent)) continue;
+    if (st.lead==='unsent' && L && L.sent) continue;
     if (q){ const h = (r[F.name]+' '+r[F.addr]).toLowerCase(); if (!q.split(' ').every(w=>h.includes(w)) && !(qd.length>=4 && r[F.tel].replace(/-/g,'').includes(qd))) continue; }
     hpc[r[F.st]]++;
     if (st.hp==='nosite' ? r[F.st]===2 : r[F.st]!==+st.hp) continue;
@@ -713,12 +719,28 @@ function snCell(r){
   if (!hasSns(r)) return '<span class="none">—</span>';
   return `<div class="sn">${r[F.sns].slice(0,4).map(u=>{ const t=snsType(u); const ic = t==='blog'?'b':t==='insta'?'<svg><use href="#i-insta"/></svg>':t==='yt'?'<svg><use href="#i-play"/></svg>':'<svg><use href="#i-link"/></svg>'; return `<a class="${t}" href="${esc(fullUrl(u))}" target="_blank" rel="noopener" title="${esc(u)}" data-stop>${ic}</a>`; }).join('')}</div>`;
 }
+const SENT = { k:{t:'카톡',c:'#a37f00',b:'rgba(245,196,0,.22)'}, e:{t:'이메일',c:'#3b82f6',b:'rgba(59,130,246,.15)'}, s:{t:'문자',c:'#18a957',b:'rgba(18,161,80,.15)'} };
+const sentOf = i => (leads[keyOf(i)] || {}).sent || {};
+const sentAny = i => Object.keys(sentOf(i)).length > 0;
+const mdStr = ts => { const d = new Date(ts); return (d.getMonth()+1) + '/' + d.getDate(); };
+function sentBadges(i){ const S = sentOf(i); return Object.keys(SENT).filter(c => S[c]).map(c => `<span class="bd snt" style="color:${SENT[c].c};background:${SENT[c].b}">✓ ${SENT[c].t} 보냄 ${mdStr(S[c])}</span>`).join(''); }
+function sentText(i){ const S = sentOf(i); return Object.keys(SENT).filter(c => S[c]).map(c => SENT[c].t + ' ' + new Date(S[c]).toLocaleDateString('ko-KR')).join(' / '); }
+function markSent(i, ch, on = true){
+  if (i < 0 || !ROWS[i]) return;
+  const L = leads[keyOf(i)] || {}, S = Object.assign({}, L.sent || {});
+  if (on) S[ch] = Date.now(); else delete S[ch];
+  const patch = { sent: Object.keys(S).length ? S : undefined };
+  if (on && (!L.s || L.s === 'fav')) patch.s = 'call';
+  setLead(i, patch);
+  toast(on ? SENT[ch].t + ' 보냄으로 표시했어요 (상세창에서 취소 가능)' : SENT[ch].t + ' 보냄 표시를 지웠어요');
+  if ($('#det').classList.contains('open') && +$('#det').dataset.i === i) setTimeout(() => { const d = $('#det'), db = $('#det .db'), s1 = d.scrollTop, s2 = db ? db.scrollTop : 0; openDet(i); d.scrollTop = s1; if ($('#det .db')) $('#det .db').scrollTop = s2; }, 250);
+}
 function leadCell(i){ const L = leads[keyOf(i)]; return L && L.s ? `<span class="lst" style="color:${LEAD[L.s].c};background:${LEAD[L.s].b}">${LEAD[L.s].t}</span>` : (L && L.m ? '<span class="lst" style="color:#7c8aa0;background:rgba(100,116,139,.18)">메모</span>' : '<span class="none">—</span>'); }
 function rowHTML(i){
   const r = ROWS[i], L = leads[keyOf(i)] || {}, m = monthsSince(r[F.open]);
-  return `<tr data-i="${i}" class="${i===selIdx?'act':''}">
+  return `<tr data-i="${i}" class="${i===selIdx?'act':''}${sentAny(i)?' sent':''}">
     <td><button class="star${L.star?' on':''}" data-star="${i}" data-stop>${L.star?'★':'☆'}</button></td>
-    <td class="nm"><b>${esc(r[F.name])}</b><small>${esc(sidoName(i))} ${esc(r[F.sggu])} · ${esc(r[F.addr].replace(/^\S+\s\S+\s/,''))}</small><div class="bdg"><span class="bd">${typeName(i)}</span>${m<=12?`<span class="bd new">신규 ${ageLabel(r[F.open])}</span>`:''}</div></td>
+    <td class="nm"><b>${esc(r[F.name])}</b><small>${esc(sidoName(i))} ${esc(r[F.sggu])} · ${esc(r[F.addr].replace(/^\S+\s\S+\s/,''))}</small><div class="bdg"><span class="bd">${typeName(i)}</span>${m<=12?`<span class="bd new">신규 ${ageLabel(r[F.open])}</span>`:''}${sentBadges(i)}</div></td>
     <td>${hpCell(r)}</td><td>${kkCell(r)}</td><td>${emCell(r)}</td><td class="c-sn">${snCell(r)}</td>
     <td>${r[F.tel]?`<a class="tel" href="tel:${esc(r[F.tel])}" data-stop>${esc(r[F.tel])}</a>`:'<span class="none">—</span>'}</td>
     <td class="c-dt"><div class="dt">${openStr(r[F.open])}<small>${ageLabel(r[F.open])}</small></div></td>
@@ -726,8 +748,8 @@ function rowHTML(i){
 }
 function cardHTML(i){
   const r = ROWS[i], L = leads[keyOf(i)] || {}, m = monthsSince(r[F.open]);
-  return `<div class="mc" data-i="${i}"><div class="r1"><b>${esc(r[F.name])}</b><button class="star${L.star?' on':''}" data-star="${i}" data-stop>${L.star?'★':'☆'}</button></div>
-    <div class="ad">${typeName(i)} · ${esc(sidoName(i))} ${esc(r[F.sggu])}${m<=12?' · <b style="color:var(--green)">신규</b>':''}</div>
+  return `<div class="mc${sentAny(i)?' sent':''}" data-i="${i}"><div class="r1"><b>${esc(r[F.name])}</b><button class="star${L.star?' on':''}" data-star="${i}" data-stop>${L.star?'★':'☆'}</button></div>
+    <div class="ad">${typeName(i)} · ${esc(sidoName(i))} ${esc(r[F.sggu])}${m<=12?' · <b style="color:var(--green)">신규</b>':''}${sentAny(i)?' '+sentBadges(i):''}</div>
     <div class="r2">${hpCell(r)}${r[F.tc]?kkCell(r):''}${r[F.email]?`<span class="tag" style="background:var(--bluebg);color:var(--blue)"><svg><use href="#i-mail"/></svg>이메일</span>`:''}${hasSns(r)?snCell(r):''}${r[F.tel]?`<a class="tel" href="tel:${esc(r[F.tel])}" data-stop style="margin-left:auto">${esc(r[F.tel])}</a>`:''}</div></div>`;
 }
 function renderTable(){
@@ -784,6 +806,8 @@ function openDet(i){
         <button data-copyall>정보 전체 복사</button>
       </div>
       ${drawerPromptHTML(i)}
+      <div class="h4">보낸 기록 <span style="font-weight:500">· 누르면 표시/취소</span></div>
+      <div class="stl">${Object.entries(SENT).map(([c,v]) => { const ts = sentOf(i)[c]; return `<button data-sent="${c}" style="${ts?`color:${v.c};background:${v.b};border-color:${v.c}`:''}">${ts?'✓ ':''}${v.t} 보냄${ts?' · '+mdStr(ts):''}</button>`; }).join('')}</div>
       <dl class="kv">
         <dt>주소</dt><dd>${esc(r[F.addr])}</dd>
         <dt>개설일</dt><dd>${openStr(r[F.open])} (${ageLabel(r[F.open])})</dd>
@@ -804,7 +828,7 @@ function openDet(i){
 function closeDet(){ $('#det').classList.remove('open'); selIdx = -1; $$('#tbody tr.act').forEach(e=>e.classList.remove('act')); if (selOv) { selOv.setMap(null); selOv = null; } }
 function setLead(i, patch){
   const k = keyOf(i); const L0 = Object.assign({}, leads[k]||{}, patch, {u:Date.now()});
-  if (!L0.s && !L0.m && !L0.star && !L0.demo && !L0.mob) delete leads[k]; else leads[k] = L0;
+  if (!L0.s && !L0.m && !L0.star && !L0.demo && !L0.mob && !L0.sent) delete leads[k]; else leads[k] = L0;
   saveLeads(); refreshRow(i);
 }
 
@@ -879,11 +903,11 @@ function setView(v){
 // ---------- csv / backup ----------
 function csv(){
   if (!result.length) return toast('내보낼 결과가 없어요');
-  const head = ['기관명','종별','시도','시군구','주소','전화번호','홈페이지 상태','홈페이지','카톡채널','카톡 친구수','이메일(추정)','블로그·SNS','개설일','의사수','전문의 과목','영업 상태','관심','메모'];
+  const head = ['기관명','종별','시도','시군구','주소','전화번호','홈페이지 상태','홈페이지','카톡채널','카톡 친구수','이메일(추정)','블로그·SNS','개설일','의사수','전문의 과목','영업 상태','관심','메모','보낸 기록'];
   const q = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
   const lines = [head.join(',')];
   for (const i of result) { const r = ROWS[i], L0 = leads[keyOf(i)]||{};
-    lines.push([r[F.name], typeName(i), sidoName(i), r[F.sggu], r[F.addr], r[F.tel], ['없음','블로그·SNS만','있음'][r[F.st]], r[F.site], kakaoUrl(r[F.tc]), r[F.tf]||'', r[F.email], (r[F.sns]||[]).join(' '), openStr(r[F.open]), r[F.docs], deptList(r[F.dSpec]).join(' '), L0.s?LEAD[L0.s].t:'', L0.star?'★':'', L0.m||''].map(q).join(','));
+    lines.push([r[F.name], typeName(i), sidoName(i), r[F.sggu], r[F.addr], r[F.tel], ['없음','블로그·SNS만','있음'][r[F.st]], r[F.site], kakaoUrl(r[F.tc]), r[F.tf]||'', r[F.email], (r[F.sns]||[]).join(' '), openStr(r[F.open]), r[F.docs], deptList(r[F.dSpec]).join(' '), L0.s?LEAD[L0.s].t:'', L0.star?'★':'', L0.m||'', sentText(i)].map(q).join(','));
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'}));
   a.download = `홈페이지없는병원_${st.sido!==''?META.sidos[+st.sido]:'전국'}${st.sggu?'_'+st.sggu:''}_${result.length}곳.csv`; a.click();
@@ -949,7 +973,7 @@ function smsLog(how){
   if (smsI < 0) return;
   const L = leads[keyOf(smsI)] || {}, d = new Date();
   const line = '[' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + '] 문자 발송(' + how + ') ' + sFmt($('#smsTo').value);
-  setLead(smsI, { s: (L.s && L.s !== 'fav') ? L.s : 'call', m: (L.m ? L.m + '\n' : '') + line });
+  setLead(smsI, { s: (L.s && L.s !== 'fav') ? L.s : 'call', m: (L.m ? L.m + '\n' : '') + line, sent: Object.assign({}, L.sent || {}, { s: Date.now() }) });
   if ($('#det') && +$('#det').dataset.i === smsI && typeof openDet === 'function') openDet(smsI);
 }
 async function solAuth(){
@@ -1128,7 +1152,7 @@ function drawerPromptHTML(i){
   if (!opts.length) return '';
   const r = ROWS[i];
   const def = opts.find(p => p.id==='ow2') || (r[F.tc] && opts.find(p => p.id==='d13')) || (r[F.email] && opts.find(p => p.id==='d14')) || opts.find(p => p.id==='d13') || opts.find(p => r[F.st]===1 ? p.id==='d3' : (monthsSince(r[F.open])<=12 ? p.id==='d2' : p.id==='d1')) || opts[0];
-  return `<div class="h4">응대 문구</div><div class="dprompt"><select class="dd" id="dpSel">${opts.map(p => `<option value="${p.id}" ${p.id===def.id?'selected':''}>[${CATS[p.cat]||'기타'}] ${esc(p.title)}</option>`).join('')}</select><input class="inp demo-in" id="dpDemo" placeholder="이 병원 데모 링크 → {데모링크}" value="${esc((leads[keyOf(i)]||{}).demo||'')}" style="height:36px;font-size:12.5px;margin-bottom:8px"><div class="ptext" id="dpText">${fillHTML(def.body||'', i)}</div><div class="pacts"><button class="pbtn pri" data-dpcopy>문구 복사</button><button class="pbtn" data-dpsms>문자 보내기</button>${r[F.tc]?`<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener">복사 후 카톡 열기</a>`:''}<button class="pbtn" data-dpedit>프롬프트에서 편집</button></div></div>`;
+  return `<div class="h4">응대 문구</div><div class="dprompt"><select class="dd" id="dpSel">${opts.map(p => `<option value="${p.id}" ${p.id===def.id?'selected':''}>[${CATS[p.cat]||'기타'}] ${esc(p.title)}</option>`).join('')}</select><input class="inp demo-in" id="dpDemo" placeholder="이 병원 데모 링크 → {데모링크}" value="${esc((leads[keyOf(i)]||{}).demo||'')}" style="height:36px;font-size:12.5px;margin-bottom:8px"><div class="ptext" id="dpText">${fillHTML(def.body||'', i)}</div><div class="pacts"><button class="pbtn pri" data-dpcopy>문구 복사</button><button class="pbtn" data-dpsms>문자 보내기</button>${r[F.email]?`<a class="pbtn" data-dpmail href="mailto:${esc(r[F.email])}">메일 쓰기</a>`:''}${r[F.tc]?`<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener">복사 후 카톡 열기</a>`:''}<button class="pbtn" data-dpedit>프롬프트에서 편집</button></div></div>`;
 }
 function bindPrompts(){
   let pT;
@@ -1144,7 +1168,7 @@ function bindPrompts(){
   $('#pReset').addEventListener('click', () => { let n = 0; DEFAULT_PROMPTS.forEach(d => { if (!prompts.find(p => p.id===d.id)) { prompts.push({...d}); n++; } }); saveP(); renderPList(); toast(n ? `기본 프롬프트 ${n}개를 다시 추가했어요` : '기본 프롬프트가 모두 있어요'); });
   ['pfName','pfContact','pfPort','pfKakao','pfDemo'].forEach(id => $('#'+id).addEventListener('input', () => { profile = { name: $('#pfName').value, contact: $('#pfContact').value, port: $('#pfPort').value, kakao: $('#pfKakao').value, demo: $('#pfDemo').value }; saveProf(); renderPrev(); }));
   $('#psel').addEventListener('input', e => { if (e.target.id !== 'pDemo') return; const i = +e.target.dataset.demoI; clearTimeout(e.target._t); e.target._t = setTimeout(() => { setLead(i, { demo: e.target.value.trim() }); renderPrev(); }, 300); });
-  $('#pacts').addEventListener('click', e => { if (e.target.closest('[data-psms]')) { const p = prompts.find(x => x.id===curP); openSms(pHosp, p ? fillText(p.body||'', pHosp, pName) : ''); return; } if (!e.target.closest('[data-pcopy]')) return; const p = prompts.find(x => x.id===curP); if (p) copy(fillText(p.body||'', pHosp, pName), '복사했어요. 카톡·메일·AI에 붙여넣으세요'); });
+  $('#pacts').addEventListener('click', e => { const pa = e.target.closest('a'); if (pa && pHosp >= 0) { if (pa.classList.contains('k')) markSent(pHosp, 'k'); else if (pa.getAttribute('href')?.startsWith('mailto:')) markSent(pHosp, 'e'); } if (e.target.closest('[data-psms]')) { const p = prompts.find(x => x.id===curP); openSms(pHosp, p ? fillText(p.body||'', pHosp, pName) : ''); return; } if (!e.target.closest('[data-pcopy]')) return; const p = prompts.find(x => x.id===curP); if (p) copy(fillText(p.body||'', pHosp, pName), '복사했어요. 카톡·메일·AI에 붙여넣으세요'); });
   $('#psel').addEventListener('input', e => { if (e.target.id !== 'pDemoTmp') return; pDemoTmp = e.target.value.trim(); renderPrev(); });
   $('#psel').addEventListener('click', e => { if (e.target.closest('[data-unsel]')) pickHosp(-1); });
   let hT;
@@ -1197,8 +1221,11 @@ function bind(){
     const s = e.target.closest('[data-st]'); if (s) { const v = s.dataset.st; setLead(i, {s: (leads[keyOf(i)]||{}).s===v ? '' : v}); openDet(i); return; }
     if (e.target.closest('[data-showmap]')) { if (innerWidth<=900) { setMobile('map'); } else setView('map'); setTimeout(()=>{ if (mapReady) { kmap.relayout(); focusMap(i, true); drawMap(); } else { const w = setInterval(()=>{ if (mapReady){ clearInterval(w); focusMap(i,true); drawMap(); } }, 200); } }, 60); return; }
     if (e.target.id === 'dpSel') return;
+    const sb = e.target.closest('[data-sent]'); if (sb) { const c = sb.dataset.sent; markSent(i, c, !sentOf(i)[c]); return; }
+    const ml = e.target.closest('[data-dpmail]'); if (ml) { const p = prompts.find(x => x.id===$('#dpSel').value), t = p ? fillText(p.body||'', i) : ''; ml.href = 'mailto:' + ROWS[i][F.email] + '?subject=' + encodeURIComponent(ROWS[i][F.name] + ' 맞춤 홈페이지 시안 안내') + '&body=' + encodeURIComponent(t); try { navigator.clipboard.writeText(t); } catch {} markSent(i, 'e'); return; }
+    if (e.target.closest('.acts a.k')) markSent(i, 'k');
     if (e.target.closest('[data-dpsms]')) { const p = prompts.find(x => x.id===$('#dpSel').value); openSms(i, p ? fillText(p.body||'', i) : ''); return; }
-    if (e.target.closest('[data-dpcopy]') || e.target.closest('.dprompt .pbtn.k')) { const p = prompts.find(x => x.id===$('#dpSel').value); if (p) copy(fillText(p.body||'', i), '문구 복사했어요'); return; }
+    if (e.target.closest('[data-dpcopy]') || e.target.closest('.dprompt .pbtn.k')) { const p = prompts.find(x => x.id===$('#dpSel').value); if (p) copy(fillText(p.body||'', i), '문구 복사했어요'); if (e.target.closest('.dprompt .pbtn.k')) markSent(i, 'k'); return; }
     if (e.target.closest('[data-dpedit]')) { const id = $('#dpSel').value; pHosp = i; if (innerWidth<=900) setMobile('prompt'); else setView('prompt'); renderPSel(); openP(id); closeDetKeep(); return; }
     if (e.target.closest('[data-copyall]')) { const r = ROWS[i]; copy([`${r[F.name]} (${typeName(i)})`, r[F.addr], '전화: '+(r[F.tel]||'-'), '홈페이지: '+(['없음','블로그·SNS만','있음 '+r[F.site]][r[F.st]]), r[F.tc]?'카톡채널: '+kakaoUrl(r[F.tc]):'', r[F.email]?'이메일(추정): '+r[F.email]:'', ...(r[F.sns]||[])].filter(Boolean).join('\n')); }
   });
