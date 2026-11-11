@@ -927,7 +927,7 @@ function smsUpd(){
   $('#smsBytes').style.color = b > 2000 ? 'var(--red)' : '';
   const to = $('#smsTo').value, w = $('#smsWarn'), r = smsI >= 0 ? ROWS[smsI] : null;
   if (to && !sMob(to)) { w.className = 'smsw'; w.textContent = '휴대폰 번호(010)가 아니에요. 유선번호는 문자를 못 받아요.'; }
-  else if (!to && r) { w.className = 'smsw'; w.textContent = '병원 대표번호(' + (r[F.tel] || '없음') + ')는 유선이라 문자를 못 받아요. 원장님·실장님 휴대폰 번호를 넣어주세요. (넣으면 이 병원에 저장돼요)'; }
+  else if (!to && r) { w.className = 'smsw'; w.textContent = (r[F.tel] ? '병원 대표번호(' + r[F.tel] + ')는 유선이라 문자를 못 받아요. ' : '등록된 휴대폰 번호가 없어요. ') + '원장님·실장님 휴대폰 번호를 넣어주세요. (넣으면 이 병원에 저장돼요)'; }
   else { w.className = 'smsw ok'; w.textContent = to ? '받는 사람: ' + sFmt(to) : ''; }
 }
 function smsRes(msg, cls){ const el = $('#smsRes'); el.className = 'smsres ' + (cls || ''); el.innerHTML = msg; }
@@ -960,6 +960,7 @@ async function solAuth(){
 }
 async function solFetch(url, opt = {}){
   const res = await fetch(url, { ...opt, headers: { 'Content-Type': 'application/json', Authorization: await solAuth(), ...(opt.headers || {}) } });
+  if (!(res.headers.get('content-type') || '').includes('json')) throw new Error('API Key/Secret이 맞지 않거나 솔라피 응답이 비정상이에요');
   const j = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(j.errorMessage || j.message || ('HTTP ' + res.status));
   return j;
@@ -1009,7 +1010,7 @@ async function smsSendApi(){
   $('#smsTest').addEventListener('click', async () => {
     smsSaveCfg();
     if (!smsCfg.key || !smsCfg.secret) { smsRes('API Key와 Secret을 넣어주세요.', 'err'); return; }
-    try { const j = await solFetch('https://api.solapi.com/cash/v1/balance'); smsRes('연결 성공! 잔액 ' + Number(j.balance || 0).toLocaleString() + '원 · 포인트 ' + Number(j.point || 0).toLocaleString() + 'P', 'ok'); }
+    try { const j = await solFetch('https://api.solapi.com/cash/v1/balance'); if (j.balance === undefined) throw new Error('잔액 정보를 못 받았어요'); smsRes('연결 성공! 잔액 ' + Number(j.balance || 0).toLocaleString() + '원 · 포인트 ' + Number(j.point || 0).toLocaleString() + 'P', 'ok'); }
     catch (e) { smsRes('연결 실패: ' + esc(e.message), 'err'); }
   });
 })();
