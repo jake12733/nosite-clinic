@@ -876,7 +876,7 @@ const HOSP_BLOCK = `[병원 정보]
 - 현재 홈페이지: {홈페이지상태}
 - 카톡채널: {카톡채널}`;
 const DEFAULT_PROMPTS = [
-{id:'ow1',cat:'kakao',title:'Owen Web 첫 제안 (칭찬 우선형)',body:`안녕하세요 원장님, 병원 사이트를 전문적으로 만드는 Owen Web(오웬웹)입니다.
+{id:'ow2',cat:'kakao',title:'Owen Web 첫 제안',body:`안녕하세요 원장님, 병원 사이트를 전문적으로 만드는 Owen Web(오웬웹)입니다.
 
 지역 내에서 {병원명}을 찾으시는 환자분들께 친절하고 전문성 높은 진료를 제공하고 계신 점이 정말 인상 깊었습니다. 특히 병원의 세심한 안내와 진료 철학은 환자들에게 큰 신뢰를 주는 훌륭한 강점이라고 생각합니다.
 
@@ -884,7 +884,7 @@ const DEFAULT_PROMPTS = [
 
 원장님의 병원에 날개를 달아드릴 수 있도록, {병원명}만을 위한 스마트폰 맞춤형 라이브 데모 시안을 미리 준비해 보았습니다. 아래 링크에서 직접 터치하며 확인해 보실 수 있습니다.
 
-🔗 {병원명} 맞춤 모바일 웹 시안 확인하기: {데모링크}
+🔗 {병원명} 맞춤 모바일 웹 시안 확인하기: https://jake12733.github.io/elpis/
 
 [오웬웹 맞춤 세팅 포인트]
 
@@ -892,22 +892,22 @@ const DEFAULT_PROMPTS = [
 
 모바일 최적화: 스마트폰에서 기다림 없이 0.5초 만에 켜지는 쾌속 로딩
 
-부담 없는 가치: 거품을 쏙 뺀 합리적인 50만 원 단일 패키지 구성
+합리적인 실속 패키지: 거품을 쏙 빼고 딱 50만 원으로 초기 구축부터 세팅까지 완료
 
-백 마디 설명보다 눈으로 직접 확인하실 수 있도록 준비한 데모 사이트이니 편하게 살펴보시고, 텍스트나 디자인 수정이 필요한 부분이 있다면 언제든 부담 없이 말씀해 주세요! 100% 무료로 원하시는 형태에 맞춰 드리겠습니다.
+백 마디 설명보다 눈으로 직접 확인하실 수 있도록 준비한 데모 사이트이니 편하게 살펴보시고, 텍스트나 디자인 수정이 필요한 부분이 있다면 언제든 편하게 말씀해 주세요. 원장님 마음에 쏙 드실 때까지 꼼꼼하게 다듬어 드리겠습니다.
 
 감사합니다.
 
 Owen Web 드림
 
-카카오톡 문의: {카톡ID}
+카카오톡 ID: jake1273322
 
-이메일: [이메일 주소]`}
+이메일: yunt59894@gmail.com`}
 ];
-if (localStorage.getItem('nosite-prompts-v') !== 'ow1') { localStorage.setItem(PS, JSON.stringify(DEFAULT_PROMPTS)); localStorage.setItem('nosite-prompts-seen', JSON.stringify(['ow1'])); localStorage.setItem('nosite-prompts-v', 'ow1'); }
+if (localStorage.getItem('nosite-prompts-v') !== 'ow2') { localStorage.setItem(PS, JSON.stringify(DEFAULT_PROMPTS)); localStorage.setItem('nosite-prompts-seen', JSON.stringify(['ow2'])); localStorage.setItem('nosite-prompts-v', 'ow2'); }
 let prompts = [], profile = {}, curP = null, pHosp = -1, pCatF = 'all';
 try { prompts = JSON.parse(localStorage.getItem(PS) || 'null'); } catch { prompts = null; }
-const NEW_DEFAULTS = ['ow1'];
+const NEW_DEFAULTS = ['ow2'];
 if (!Array.isArray(prompts)) prompts = DEFAULT_PROMPTS.map(p => ({...p}));
 let seenD; try { seenD = JSON.parse(localStorage.getItem('nosite-prompts-seen') || 'null'); } catch { seenD = null; }
 if (!Array.isArray(seenD)) seenD = localStorage.getItem(PS) ? DEFAULT_PROMPTS.map(d => d.id).filter(id => !NEW_DEFAULTS.includes(id)) : DEFAULT_PROMPTS.map(d => d.id);
@@ -971,7 +971,7 @@ function drawerPromptHTML(i){
   const opts = prompts.filter(p => p.cat !== 'ai').concat(prompts.filter(p => p.cat === 'ai'));
   if (!opts.length) return '';
   const r = ROWS[i];
-  const def = opts.find(p => p.id==='ow1') || (r[F.tc] && opts.find(p => p.id==='d13')) || (r[F.email] && opts.find(p => p.id==='d14')) || opts.find(p => p.id==='d13') || opts.find(p => r[F.st]===1 ? p.id==='d3' : (monthsSince(r[F.open])<=12 ? p.id==='d2' : p.id==='d1')) || opts[0];
+  const def = opts.find(p => p.id==='ow2') || (r[F.tc] && opts.find(p => p.id==='d13')) || (r[F.email] && opts.find(p => p.id==='d14')) || opts.find(p => p.id==='d13') || opts.find(p => r[F.st]===1 ? p.id==='d3' : (monthsSince(r[F.open])<=12 ? p.id==='d2' : p.id==='d1')) || opts[0];
   return `<div class="h4">응대 문구</div><div class="dprompt"><select class="dd" id="dpSel">${opts.map(p => `<option value="${p.id}" ${p.id===def.id?'selected':''}>[${CATS[p.cat]||'기타'}] ${esc(p.title)}</option>`).join('')}</select><input class="inp demo-in" id="dpDemo" placeholder="이 병원 데모 링크 → {데모링크}" value="${esc((leads[keyOf(i)]||{}).demo||'')}" style="height:36px;font-size:12.5px;margin-bottom:8px"><div class="ptext" id="dpText">${fillHTML(def.body||'', i)}</div><div class="pacts"><button class="pbtn pri" data-dpcopy>문구 복사</button>${r[F.tc]?`<a class="pbtn k" href="${kakaoChat(r[F.tc])}" target="_blank" rel="noopener">복사 후 카톡 열기</a>`:''}<button class="pbtn" data-dpedit>프롬프트에서 편집</button></div></div>`;
 }
 function bindPrompts(){
